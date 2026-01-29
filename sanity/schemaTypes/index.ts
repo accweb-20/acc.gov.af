@@ -1,10 +1,9 @@
-import { type SchemaTypeDefinition } from 'sanity'
+// schemaTypes/index
 
-import {blockContentType} from './blockContentType'
-import {categoryType} from './categoryType'
-import {postType} from './postType'
-import {authorType} from './authorType'
+import slider from './slider';
+import annualReport from "./annualReport";
+import policy from "./policy";
+import header from "./header";
+import footer from "./footer";
 
-export const schema: { types: SchemaTypeDefinition[] } = {
-  types: [blockContentType, categoryType, postType, authorType],
-}
+export const schema = [slider, annualReport, policy, header, footer];
