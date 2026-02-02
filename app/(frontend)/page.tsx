@@ -13,6 +13,7 @@ export default function Home() {
   return (
     <>
       <ScrollUp />
+      <h1>Website slogan</h1>
     </>
   );
 }
