@@ -1,13 +1,12 @@
-// sanity.config.ts
 'use client'
 
 /**
  * This configuration is used for the Sanity Studio mounted at /admin
  */
 
-import { visionTool } from '@sanity/vision'
 import { defineConfig } from 'sanity'
-import { structureTool } from 'sanity/structure'
+import { deskTool } from 'sanity/desk'
+import { visionTool } from '@sanity/vision'
 
 // API config
 import { apiVersion, dataset, projectId } from './sanity/env'
@@ -20,12 +19,14 @@ export default defineConfig({
   basePath: '/admin',
   projectId,
   dataset,
-  // Pass schemaTypes inside the `types` property
   schema: {
     types: schema,
   },
   plugins: [
-    structureTool({ structure }),
+    // deskTool replaces structureTool in v3
+    deskTool({
+      structure, // pass your custom structure here
+    }),
     // Vision tool for querying GROQ
     visionTool({ defaultApiVersion: apiVersion }),
   ],
