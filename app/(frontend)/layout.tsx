@@ -1,6 +1,4 @@
 // app/layout.tsx
-"use client";
-
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -12,6 +10,8 @@ const rubik = Rubik({
   weight: ["300", "400", "500", "600", "700", "800"],
   display: "swap",
 });
+
+import { Providers } from "./providers";
 
 export default function RootLayout({
   children,
@@ -35,5 +35,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-import { Providers } from "./providers";

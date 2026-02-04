@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { sanityClient, getSanityImageUrl } from "../../sanity/lib/client";
+import { useLang } from "@/context/LanguageContext";
 
 type SanityLink = {
   linkType?: "internal" | "external";
@@ -42,20 +43,15 @@ const LANGS = [
 ];
 
 export default function Header(): JSX.Element {
+  const { lang, setLang } = useLang();
+
   const [data, setData] = useState<HeaderDoc | null>(null);
   const [navbarOpen, setNavbarOpen] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [lang, setLang] = useState<string>(() =>
-    typeof window !== "undefined" ? localStorage.getItem("site_lang") ?? "en" : "en"
-  );
   const [langOpen, setLangOpen] = useState(false);
   const pathname = usePathname();
   const mobileRef = useRef<HTMLDivElement | null>(null);
   const langRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") localStorage.setItem("site_lang", lang);
-  }, [lang]);
 
   useEffect(() => {
     setNavbarOpen(false);
@@ -156,13 +152,13 @@ export default function Header(): JSX.Element {
                   {LANGS.find((l) => l.value === lang)?.label ?? "Language"}
                   <span className="ml-2" aria-hidden>
                     <svg width="25" height="24" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                  fillRule="evenodd"
-                                  clipRule="evenodd"
-                                  d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                                  fill="currentColor"
-                                />
-                              </svg>
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
+                        fill="currentColor"
+                      />
+                    </svg>
                   </span>
                 </button>
                 {langOpen && (
@@ -177,10 +173,10 @@ export default function Header(): JSX.Element {
                         key={l.value}
                         role="option"
                         onClick={() => {
-                          setLang(l.value);
+                          setLang(l.value as any);
                           setLangOpen(false);
                         }}
-                        onKeyDown={(e) => e.key === "Enter" && (setLang(l.value), setLangOpen(false))}
+                        onKeyDown={(e) => e.key === "Enter" && (setLang(l.value as any), setLangOpen(false))}
                         className="cursor-pointer px-3 py-2 text-sm"
                         style={{ color: "#02587b" }}
                         onMouseEnter={(e) => {
@@ -263,7 +259,6 @@ export default function Header(): JSX.Element {
                                         >
                                           {si.label}
                                         </Link>
-
                                       )}
                                     </li>
                                   );
@@ -321,10 +316,10 @@ export default function Header(): JSX.Element {
                   <span className="ml-2" aria-hidden>
                     <svg width="15" height="14" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
                       <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                      fill="currentColor"
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
+                        fill="currentColor"
                       />
                     </svg>
                   </span>
@@ -342,10 +337,10 @@ export default function Header(): JSX.Element {
                         key={l.value}
                         role="option"
                         onClick={() => {
-                          setLang(l.value);
+                          setLang(l.value as any);
                           setLangOpen(false);
                         }}
-                        onKeyDown={(e) => e.key === "Enter" && (setLang(l.value), setLangOpen(false))}
+                        onKeyDown={(e) => e.key === "Enter" && (setLang(l.value as any), setLangOpen(false))}
                         className="cursor-pointer px-3 py-2 text-sm"
                         style={{ color: "#02587b" }}
                         onMouseEnter={(e) => {
@@ -403,8 +398,6 @@ export default function Header(): JSX.Element {
 
             {/* mobile header right: language select + close icon */}
             <div className="flex items-center gap-3">
-              
-
               <button onClick={() => setNavbarOpen(false)} aria-label="Close menu" className="p-2">
                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M18 6L6 18" stroke="#02587b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -440,13 +433,13 @@ export default function Header(): JSX.Element {
                         {item.showSubmenu && (
                           <button onClick={() => toggleSub(i)} aria-label="Toggle" className={`p-2 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "#02587b" }}>
                             <svg width="20" height="20" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                      fill="currentColor"
-                      />
-                    </svg>
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
+                                fill="currentColor"
+                              />
+                            </svg>
                           </button>
                         )}
                       </div>
@@ -533,30 +526,16 @@ export default function Header(): JSX.Element {
           pointer-events: none;
         }
 
-        
-
         /* Expand from center on hover/focus; collapse on mouseout/blur */
         li:hover .nav-link::after,
         .nav-link:focus::after {
           transform: scaleX(1);
         }
 
-        /* Ensure underline doesn't change layout height */
-        header {
-          /* nothing needed here - pseudo elements are absolutely positioned */
-        }
-
         /* Remove rounding from underlines (force) */
         .nav-link::after {
           border-radius: 0 !important;
         }
-
-        /*
-          IMPORTANT:
-          Native <select> options cannot be reliably styled across browsers.
-          To meet the requirement "Language dropdown's hovered item background color should be #02587B with #F5F5F5 text"
-          this component uses a custom dropdown (native <select> was replaced where visible).
-        */
 
         /* Small screens: hide the pseudo underline animations to avoid layout quirks */
         @media (max-width: 1023px) {
