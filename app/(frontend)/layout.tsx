@@ -1,12 +1,17 @@
+// app/layout.tsx
 "use client";
 
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import ScrollToTop from "@/components/ScrollToTop";
-import { Inter } from "next/font/google";
+import { Rubik } from "next/font/google";
 import "../../styles/index.css";
 
-const inter = Inter({ subsets: ["latin"] });
+const rubik = Rubik({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  display: "swap",
+});
 
 export default function RootLayout({
   children,
@@ -15,13 +20,9 @@ export default function RootLayout({
 }) {
   return (
     <html suppressHydrationWarning lang="en">
-      {/*
-        <head /> will contain the components returned by the nearest parent
-        head.js. Find out more at https://beta.nextjs.org/docs/api-reference/file-conventions/head
-      */}
       <head />
-
-      <body className={`bg-[#FCFCFC] dark:bg-black ${inter.className}`}>
+      {/* Apply rubik.className so the whole site uses Rubik (served from Next.js) */}
+      <body className={`bg-[#FCFCFC] dark:bg-black text-[#1A1A1A] text-[18px] ${rubik.className}`}>
         <Providers>
           <div className="isolate">
             <Header />
@@ -36,4 +37,3 @@ export default function RootLayout({
 }
 
 import { Providers } from "./providers";
-
