@@ -45,17 +45,31 @@ export default function Header(): JSX.Element {
   const [data, setData] = useState<HeaderDoc | null>(null);
   const [navbarOpen, setNavbarOpen] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [lang, setLang] = useState<string>(() =>
-    typeof window !== "undefined" ? localStorage.getItem("site_lang") ?? "en" : "en"
-  );
-  const [langOpen, setLangOpen] = useState(false);
-  const pathname = usePathname();
-  const mobileRef = useRef<HTMLDivElement | null>(null);
-  const langRef = useRef<HTMLDivElement | null>(null);
 
+  // IMPORTANT: initialize to a server-safe deterministic value
+  const [lang, setLang] = useState<string>("en");
+
+  // read saved language on client after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("site_lang");
+    if (stored && stored !== lang) {
+      setLang(stored);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // run once on mount
+
+  // persist lang to localStorage when it changes (client-side only)
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem("site_lang", lang);
   }, [lang]);
+
+  const [langOpen, setLangOpen] = useState(false);
+  const pathname = usePathname();
+  const mobileRef = useRef<HTMLDivElement | null>(null);
+  // Use separate refs for mobile and desktop language elements (avoid assigning same ref twice)
+  const langRefMobile = useRef<HTMLDivElement | null>(null);
+  const langRefDesktop = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setNavbarOpen(false);
@@ -103,8 +117,11 @@ export default function Header(): JSX.Element {
         setNavbarOpen(false);
         setOpenIndex(null);
       }
-      const l = langRef.current;
-      if (langOpen && l && !l.contains(e.target as Node)) {
+
+      // check both language refs (desktop + mobile). If neither contains the click, close lang dropdown.
+      const d = langRefDesktop.current;
+      const m = langRefMobile.current;
+      if (langOpen && !(d?.contains(e.target as Node) || m?.contains(e.target as Node))) {
         setLangOpen(false);
       }
     }
@@ -143,7 +160,7 @@ export default function Header(): JSX.Element {
             </Link>
 
             {/* Small-screen language dropdown (styled options require custom UI) */}
-            <div className="block lg:hidden" ref={langRef}>
+            <div className="block lg:hidden" ref={langRefMobile}>
               <div className="relative inline-block">
                 <button
                   type="button"
@@ -156,13 +173,13 @@ export default function Header(): JSX.Element {
                   {LANGS.find((l) => l.value === lang)?.label ?? "Language"}
                   <span className="ml-2" aria-hidden>
                     <svg width="25" height="24" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
-                                <path
-                                  fillRule="evenodd"
-                                  clipRule="evenodd"
-                                  d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                                  fill="currentColor"
-                                />
-                              </svg>
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
+                        fill="currentColor"
+                      />
+                    </svg>
                   </span>
                 </button>
                 {langOpen && (
@@ -263,7 +280,6 @@ export default function Header(): JSX.Element {
                                         >
                                           {si.label}
                                         </Link>
-
                                       )}
                                     </li>
                                   );
@@ -307,7 +323,7 @@ export default function Header(): JSX.Element {
 
           {/* Right side: desktop language select and mobile toggle */}
           <div className="flex items-center gap-3">
-            <div className="hidden lg:block" ref={langRef}>
+            <div className="hidden lg:block" ref={langRefDesktop}>
               <div className="relative inline-block">
                 <button
                   type="button"
@@ -321,10 +337,10 @@ export default function Header(): JSX.Element {
                   <span className="ml-2" aria-hidden>
                     <svg width="15" height="14" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
                       <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                      fill="currentColor"
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
+                        fill="currentColor"
                       />
                     </svg>
                   </span>
@@ -403,8 +419,6 @@ export default function Header(): JSX.Element {
 
             {/* mobile header right: language select + close icon */}
             <div className="flex items-center gap-3">
-              
-
               <button onClick={() => setNavbarOpen(false)} aria-label="Close menu" className="p-2">
                 <svg width="30" height="30" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M18 6L6 18" stroke="#02587b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -440,13 +454,13 @@ export default function Header(): JSX.Element {
                         {item.showSubmenu && (
                           <button onClick={() => toggleSub(i)} aria-label="Toggle" className={`p-2 transition-transform ${isOpen ? "rotate-180" : ""}`} style={{ color: "#02587b" }}>
                             <svg width="20" height="20" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
-                      <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                      fill="currentColor"
-                      />
-                    </svg>
+                              <path
+                                fillRule="evenodd"
+                                clipRule="evenodd"
+                                d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
+                                fill="currentColor"
+                              />
+                            </svg>
                           </button>
                         )}
                       </div>
@@ -532,8 +546,6 @@ export default function Header(): JSX.Element {
           transition: transform 0.3s ease;
           pointer-events: none;
         }
-
-        
 
         /* Expand from center on hover/focus; collapse on mouseout/blur */
         li:hover .nav-link::after,

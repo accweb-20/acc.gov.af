@@ -21,7 +21,6 @@ export default function RootLayout({
   return (
     <html suppressHydrationWarning lang="en">
       <head />
-      {/* Apply rubik.className so the whole site uses Rubik (served from Next.js) */}
       <body className={`bg-[#FCFCFC] dark:bg-black text-[#1A1A1A] text-[18px] ${rubik.className}`}>
         <Providers>
           <div className="isolate">
