@@ -160,7 +160,7 @@ export default function Header(): JSX.Element {
             </Link>
 
             {/* Small-screen language dropdown (styled options require custom UI) */}
-            <div className="block lg:hidden" ref={langRefMobile}>
+            <div className="block hidden" ref={langRefMobile}>
               <div className="relative inline-block">
                 <button
                   type="button"
@@ -323,7 +323,7 @@ export default function Header(): JSX.Element {
 
           {/* Right side: desktop language select and mobile toggle */}
           <div className="flex items-center gap-3">
-            <div className="hidden lg:block" ref={langRefDesktop}>
+            <div className="hidden " ref={langRefDesktop}>
               <div className="relative inline-block">
                 <button
                   type="button"
