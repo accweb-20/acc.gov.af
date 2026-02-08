@@ -21,7 +21,8 @@ type SlideInput = Partial<Slide> & { id?: string | number };
 /**
  * Utility type guards
  */
-const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === "object" && v !== null;
 
 export default function Slider({ apiPath = "/api/slider" }) {
   const [slides, setSlides] = useState<Slide[]>([]);
@@ -71,16 +72,18 @@ export default function Slider({ apiPath = "/api/slider" }) {
 
       // json may be { slides: [...] } or array directly — handle both safely
       let s: Slide[] = [];
+
       if (isObject(json)) {
         const maybeSlides = (json as Record<string, unknown>)["slides"];
         if (Array.isArray(maybeSlides)) {
           s = maybeSlides.filter((i) => i != null).map((i) => i as Slide);
-        } else if (Array.isArray(json as unknown[])) {
-          s = (json as unknown[]).filter((i) => i != null).map((i) => i as Slide);
         }
-      } else if (Array.isArray(json)) {
+      }
+
+      if (Array.isArray(json)) {
         s = (json as unknown[]).filter((i) => i != null).map((i) => i as Slide);
       }
+
       return s;
     } catch (e) {
       console.error("Failed to fetch slides", e);
@@ -96,7 +99,6 @@ export default function Slider({ apiPath = "/api/slider" }) {
       if (raw) {
         const parsed: unknown = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length) {
-          // parsed is unknown[], but we've checked it's an array — cast safely to Slide[]
           setSlides(parsed as Slide[]);
           setIndex(0);
           return () => {
@@ -121,7 +123,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
     };
   }, [apiPath]);
 
-  // admin helpers (unchanged behavior, safe runtime checks)
+  // admin helpers (unchanged)
   useEffect(() => {
     // attach simple admin hooks for debugging / headless updates
     // @ts-ignore
