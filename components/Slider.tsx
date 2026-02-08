@@ -754,9 +754,6 @@ export default function Slider({ apiPath = "/api/slider" }) {
           {/* Purchase Now (left inside center) */}
           <div style={{ position: "absolute", left: 16, bottom: 16 }}>
             <button
-              onClick={() => {
-                if (window?.__openDonate) window.__openDonate();
-              }}
               onMouseEnter={onMouseEnter}
               onMouseLeave={onMouseLeave}
               className="slider-button font-bold text-[#1A1A1A] hidden"
@@ -914,9 +911,6 @@ export default function Slider({ apiPath = "/api/slider" }) {
             {/* Purchase (tablet) */}
             <div style={{ position: "absolute", left: 12, bottom: 14 }}>
               <button
-                onClick={() => {
-                  if (window?.__openDonate) window.__openDonate();
-                }}
                 className="slider-button font-bold text-[#1A1A1A] hidden"
                 style={{
                   backgroundColor: "#FFD21B",
@@ -1106,9 +1100,6 @@ export default function Slider({ apiPath = "/api/slider" }) {
             {/* Purchase mobile */}
             <div style={{ position: "absolute", left: 8, bottom: 8 }}>
               <button
-                onClick={() => {
-                  if (window?.__openDonate) window.__openDonate();
-                }}
                 className="slider-button font-bold text-[#1A1A1A] hidden"
                 style={{
                   backgroundColor: "#FFD21B",
