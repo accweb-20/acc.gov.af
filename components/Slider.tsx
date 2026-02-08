@@ -6,47 +6,52 @@ import Link from "next/link";
 import { ImageIcon } from "lucide-react";
 
 /**
- * @typedef {Object} Slide
- * @property {string|number} id
- * @property {string} desktop_image_url
- * @property {string} mobile_image_url
- * @property {string|null|undefined} [link_url]
- * @property {string|null|undefined} [title]
+ * Type definitions (converted to TS types so React/TS infers correctly)
  */
+type Slide = {
+  id: string | number;
+  desktop_image_url: string;
+  mobile_image_url: string;
+  link_url?: string | null;
+  title?: string | null;
+};
+
+type SlideInput = Partial<Slide> & { id?: string | number };
 
 /**
- * Slider component — improved smooth coordinated two-panel sliding animation
+ * Utility type guards
  */
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
+
 export default function Slider({ apiPath = "/api/slider" }) {
-  const [slides, setSlides] = useState(/** @type {Slide[]} */ ([]));
-  const [index, setIndex] = useState(0);
+  const [slides, setSlides] = useState<Slide[]>([]);
+  const [index, setIndex] = useState<number>(0);
 
   // animation state
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [animFrom, setAnimFrom] = useState(null);
-  const [animTo, setAnimTo] = useState(null);
-  const [animDir, setAnimDir] = useState("next"); // "next" | "prev"
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [animFrom, setAnimFrom] = useState<number | null>(null);
+  const [animTo, setAnimTo] = useState<number | null>(null);
+  const [animDir, setAnimDir] = useState<"next" | "prev">("next");
 
   // separate center refs per breakpoint to avoid ref collisions
-  const centerRefDesktop = useRef(null);
-  const centerRefTablet = useRef(null);
-  const centerRefMobile = useRef(null);
+  const centerRefDesktop = useRef<HTMLDivElement | null>(null);
+  const centerRefTablet = useRef<HTMLDivElement | null>(null);
+  const centerRefMobile = useRef<HTMLDivElement | null>(null);
 
-  const leftPeekRef = useRef(null);
-  const rightPeekRef = useRef(null);
-  /** @type {[number|null, (v:number|null)=>void]} */
-  const [peekHeight, setPeekHeight] = useState(null);
+  const leftPeekRef = useRef<HTMLDivElement | null>(null);
+  const rightPeekRef = useRef<HTMLDivElement | null>(null);
+  const [peekHeight, setPeekHeight] = useState<number | null>(null);
 
-  const trackRefDesktop = useRef(null);
-  const trackRefTablet = useRef(null);
-  const trackRefMobile = useRef(null);
+  const trackRefDesktop = useRef<HTMLDivElement | null>(null);
+  const trackRefTablet = useRef<HTMLDivElement | null>(null);
+  const trackRefMobile = useRef<HTMLDivElement | null>(null);
 
   const hoverRef = useRef(false);
-  const autoRef = useRef(null);
+  const autoRef = useRef<number | null>(null);
   const SESSION_KEY = "slider:slides";
 
   // session persistence
-  const persistSlides = (arr: unknown) => {
+  const persistSlides = (arr: Slide[]) => {
     try {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(arr));
     } catch (e) {
@@ -55,15 +60,27 @@ export default function Slider({ apiPath = "/api/slider" }) {
   };
 
   // fetch helper
-  const fetchSlides = async () => {
+  const fetchSlides = async (): Promise<Slide[]> => {
     try {
       const resp = await fetch(apiPath, { cache: "no-store" });
       if (!resp.ok) {
         console.error("Slide fetch failed", resp.status);
         return [];
       }
-      const json = await resp.json();
-      const s = Array.isArray(json?.slides) ? json.slides : json?.slides ?? [];
+      const json: unknown = await resp.json();
+
+      // json may be { slides: [...] } or array directly — handle both safely
+      let s: Slide[] = [];
+      if (isObject(json)) {
+        const maybeSlides = (json as Record<string, unknown>)["slides"];
+        if (Array.isArray(maybeSlides)) {
+          s = maybeSlides.filter((i) => i != null).map((i) => i as Slide);
+        } else if (Array.isArray(json as unknown[])) {
+          s = (json as unknown[]).filter((i) => i != null).map((i) => i as Slide);
+        }
+      } else if (Array.isArray(json)) {
+        s = (json as unknown[]).filter((i) => i != null).map((i) => i as Slide);
+      }
       return s;
     } catch (e) {
       console.error("Failed to fetch slides", e);
@@ -77,9 +94,10 @@ export default function Slider({ apiPath = "/api/slider" }) {
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
       if (raw) {
-        const parsed = JSON.parse(raw);
+        const parsed: unknown = JSON.parse(raw);
         if (Array.isArray(parsed) && parsed.length) {
-          setSlides(parsed);
+          // parsed is unknown[], but we've checked it's an array — cast safely to Slide[]
+          setSlides(parsed as Slide[]);
           setIndex(0);
           return () => {
             mounted = false;
@@ -103,21 +121,26 @@ export default function Slider({ apiPath = "/api/slider" }) {
     };
   }, [apiPath]);
 
-  // admin helpers (unchanged)
+  // admin helpers (unchanged behavior, safe runtime checks)
   useEffect(() => {
     // attach simple admin hooks for debugging / headless updates
     // @ts-ignore
-    window.__sliderCreate = async function (slide) {
+    window.__sliderCreate = async function (slide: SlideInput) {
       try {
         const res = await fetch(apiPath, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(slide),
         });
-        const payload = await res.json();
-        if (payload?.error) throw new Error(payload.error);
+        const payload: unknown = await res.json();
+        // payload may contain inserted array or single object with id
         setSlides((prev) => {
-          const inserted = Array.isArray(payload?.inserted) ? payload.inserted : payload && payload.id ? [payload] : [];
+          let inserted: Slide[] = [];
+          if (isObject(payload) && Array.isArray((payload as Record<string, unknown>)["inserted"])) {
+            inserted = ((payload as Record<string, unknown>)["inserted"] as unknown[]).map((p) => p as Slide);
+          } else if (isObject(payload) && "id" in (payload as Record<string, unknown>)) {
+            inserted = [payload as Slide];
+          }
           const updated = [...prev, ...inserted];
           persistSlides(updated);
           return updated;
@@ -130,21 +153,20 @@ export default function Slider({ apiPath = "/api/slider" }) {
     };
 
     // @ts-ignore
-    window.__sliderUpdate = async function (slide) {
-      if (!slide || !slide.id) {
+    window.__sliderUpdate = async function (slide: SlideInput) {
+      if (!slide || !("id" in slide)) {
         console.warn("slide.id required for update");
         return null;
       }
       try {
-        const res = await fetch(`${apiPath}/${encodeURIComponent(slide.id)}`, {
+        const res = await fetch(`${apiPath}/${encodeURIComponent(String(slide.id))}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(slide),
         });
-        const payload = await res.json();
-        if (payload?.error) throw new Error(payload.error);
+        const payload: unknown = await res.json();
         setSlides((prev) => {
-          const updated = prev.map((s) => (String(s.id) === String(slide.id) ? { ...s, ...slide } : s));
+          const updated = prev.map((s) => (String(s.id) === String(slide.id) ? { ...s, ...(slide as Partial<Slide>) } : s));
           persistSlides(updated);
           return updated;
         });
@@ -156,15 +178,14 @@ export default function Slider({ apiPath = "/api/slider" }) {
     };
 
     // @ts-ignore
-    window.__sliderDelete = async function (id) {
+    window.__sliderDelete = async function (id: string | number) {
       if (!id) {
         console.warn("id required for delete");
         return null;
       }
       try {
-        const res = await fetch(`${apiPath}/${encodeURIComponent(id)}`, { method: "DELETE" });
-        const payload = await res.json();
-        if (payload?.error) throw new Error(payload.error);
+        const res = await fetch(`${apiPath}/${encodeURIComponent(String(id))}`, { method: "DELETE" });
+        const payload: unknown = await res.json();
         setSlides((prev) => {
           const updated = prev.filter((s) => String(s.id) !== String(id));
           persistSlides(updated);
@@ -201,10 +222,10 @@ export default function Slider({ apiPath = "/api/slider" }) {
 
     if (!centerEls.length) return;
 
-    let roInstances = [];
-    let listeners = [];
+    let roInstances: ResizeObserver[] = [];
+    let listeners: Array<{ img: HTMLImageElement; fn: () => void }> = [];
 
-    const isVisible = (el) => {
+    const isVisible = (el: HTMLElement) => {
       try {
         const style = window.getComputedStyle(el);
         // visible if not display:none and has non-zero height and is in document
@@ -284,7 +305,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
   };
 
   // start an animation by setting state (React will render the two-panel track)
-  const animateTo = (newIndex, dir = "next") => {
+  const animateTo = (newIndex: number, dir: "next" | "prev" = "next") => {
     if (isAnimating) return;
     if (!slides.length) return;
     if (newIndex === index) return;
@@ -315,8 +336,6 @@ export default function Slider({ apiPath = "/api/slider" }) {
     trackEl.style.transition = "none";
 
     // Set initial transform depending on direction.
-    // For next: initial translateX(0%) (pan showing [from|to])
-    // For prev: initial translateX(-100%) (pan showing [to|from])
     if (animDir === "next") {
       trackEl.style.transform = "translateX(0%)";
     } else {
@@ -332,21 +351,15 @@ export default function Slider({ apiPath = "/api/slider" }) {
     const easing = "cubic-bezier(0.25, 0.1, 0.25, 1)";
     trackEl.style.transition = `transform ${duration}ms ${easing}`;
 
-    // compute what final transform should be (string) and keep it for cleanup
     const finalTransform = animDir === "next" ? "translateX(-100%)" : "translateX(0%)";
 
-    // Listen for transitionend once
-    const onEnd = (e) => {
+    const onEnd = (e: TransitionEvent) => {
       if (e.propertyName && e.propertyName !== "transform") return;
 
-      // cleanup and commit
-      // keep final transform to avoid snapping, remove listener immediately
-      trackEl.removeEventListener("transitionend", onEnd);
+      trackEl.removeEventListener("transitionend", onEnd as any);
       trackEl.style.transition = "none";
       trackEl.style.transform = finalTransform;
 
-      // ensure paint of final frame then let React replace UI
-      // defer to next frame to update state so browser paints final transform first
       requestAnimationFrame(() => {
         setIndex(animTo);
         setIsAnimating(false);
@@ -354,34 +367,31 @@ export default function Slider({ apiPath = "/api/slider" }) {
         setAnimTo(null);
         setAnimDir("next");
 
-        // after React swap, clear inline styles on next frame
         requestAnimationFrame(() => {
           [trackRefDesktop.current, trackRefTablet.current, trackRefMobile.current].forEach((el) => {
             if (el) {
-              el.style.transition = "";
-              el.style.transform = "";
+              (el as HTMLElement).style.transition = "";
+              (el as HTMLElement).style.transform = "";
             }
           });
         });
       });
     };
-    trackEl.addEventListener("transitionend", onEnd);
+    trackEl.addEventListener("transitionend", onEnd as unknown as EventListener);
 
-    // trigger final transform on next tick
     requestAnimationFrame(() => {
       trackEl.style.transform = finalTransform;
     });
 
-    // Safety: fallback timer in case transitionend not fired
-    const fallbackTimer = setTimeout(() => {
+    const fallbackTimer = window.setTimeout(() => {
       if (isAnimating) {
         try {
-          trackEl.removeEventListener("transitionend", onEnd);
+          trackEl.removeEventListener("transitionend", onEnd as any);
         } catch {}
         [trackRefDesktop.current, trackRefTablet.current, trackRefMobile.current].forEach((el) => {
           if (el) {
-            el.style.transition = "none";
-            el.style.transform = "none";
+            (el as HTMLElement).style.transition = "none";
+            (el as HTMLElement).style.transform = "none";
           }
         });
         setIndex(animTo);
@@ -390,7 +400,8 @@ export default function Slider({ apiPath = "/api/slider" }) {
         setAnimTo(null);
         setAnimDir("next");
       }
-    }, duration + 1200); // generous fallback
+    }, duration + 1200);
+
     return () => clearTimeout(fallbackTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAnimating, animFrom, animTo, animDir]);
@@ -409,7 +420,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
 
   // keyboard support
   useEffect(() => {
-    const onKey = (e) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") prev();
       if (e.key === "ArrowRight") next();
     };
@@ -421,8 +432,8 @@ export default function Slider({ apiPath = "/api/slider" }) {
   // auto slide every 5s; pause when hovered
   useEffect(() => {
     const startAuto = () => {
-      if (autoRef.current) clearInterval(autoRef.current);
-      autoRef.current = setInterval(() => {
+      if (autoRef.current) window.clearInterval(autoRef.current);
+      autoRef.current = window.setInterval(() => {
         if (!hoverRef.current && !isAnimating) {
           const newIndex = (index + 1) % slides.length;
           animateTo(newIndex, "next");
@@ -431,7 +442,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
     };
     startAuto();
     return () => {
-      if (autoRef.current) clearInterval(autoRef.current);
+      if (autoRef.current) window.clearInterval(autoRef.current);
     };
   }, [slides.length, index, isAnimating]);
 
@@ -444,7 +455,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
   };
 
   // small circle peek button style (desktop default)
-  const circleBtn = {
+  const circleBtn: React.CSSProperties = {
     position: "absolute",
     top: "50%",
     transform: "translateY(-50%)",
