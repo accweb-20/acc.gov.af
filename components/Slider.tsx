@@ -46,7 +46,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
   const SESSION_KEY = "slider:slides";
 
   // session persistence
-  const persistSlides = (arr) => {
+  const persistSlides = (arr: any) => {
     try {
       sessionStorage.setItem(SESSION_KEY, JSON.stringify(arr));
     } catch (e) {
