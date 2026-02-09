@@ -312,14 +312,14 @@ export default function Footer() {
 
   return (
     <footer className="relative z-10 bg-[#02587B] text-[#F5F5F5] pt-16 md:pt-20 lg:pt-24">
-      <div className="container mx-auto px-4">
-        <div className="-mx-4 flex flex-wrap">
+      <div className=" mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px]">
+        <div className=" flex flex-wrap">
           {columns.map((col, idx) => {
             const widthClass =
               idx === 0 || idx === 1 ? "w-full sm:w-1/2 md:w-1/2 lg:w-2/12 xl:w-2/12" : "w-full md:w-1/2 lg:w-4/12 xl:w-3/12";
 
             return (
-              <div key={String(idx)} className={`${widthClass} px-4`}>
+              <div key={String(idx)} className={`${widthClass} `}>
                 <div className="mb-12 lg:mb-16">
                   <h2 className="mb-6 text-xl font-bold">{col.title}</h2>
                   <ul>

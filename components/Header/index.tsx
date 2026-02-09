@@ -142,7 +142,7 @@ export default function Header(): JSX.Element {
 
   return (
     <header className="w-full fixed top-0 left-0 z-50 bg-white shadow-sm">
-      <div className="max-w-[1200px] mx-auto px-4">
+      <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px]">
         {/* Use a fixed header height so nav items can occupy full height */}
         <div className="flex items-center justify-between h-16">
           {/* Logo + small-screen language area */}
