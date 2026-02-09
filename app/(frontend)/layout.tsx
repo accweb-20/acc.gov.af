@@ -1,11 +1,10 @@
 // app/layout.tsx
-"use client";
-
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import ScrollToTop from "@/components/ScrollToTop";
 import { Rubik } from "next/font/google";
 import "../../styles/index.css";
+import { Providers } from "./providers"; // moved to top
 
 const rubik = Rubik({
   subsets: ["latin"],
@@ -35,5 +34,3 @@ export default function RootLayout({
     </html>
   );
 }
-
-import { Providers } from "./providers";
