@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * This configuration is used for the Sanity Studio mounted at /admin
  */
@@ -9,7 +11,7 @@ import { visionTool } from '@sanity/vision'
 // API config
 import { apiVersion, dataset, projectId } from './sanity/env'
 
-// Schema & structure
+// Correct import from schemaTypes
 import { schema } from './sanity/schemaTypes'
 import { structure } from './sanity/structure'
 
@@ -21,9 +23,13 @@ export default defineConfig({
     types: schema,
   },
   plugins: [
+    // deskTool replaces structureTool in v3
     deskTool({
-      structure: structure as unknown as any,
+      structure(S, context) {
+        
+      }, // pass your custom structure here
     }),
+    // Vision tool for querying GROQ
     visionTool({ defaultApiVersion: apiVersion }),
   ],
 })
