@@ -1,4 +1,6 @@
 // app/layout.tsx
+"use client";
+
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";
 import ScrollToTop from "@/components/ScrollToTop";
@@ -11,8 +13,6 @@ const rubik = Rubik({
   display: "swap",
 });
 
-import { Providers } from "./providers";
-
 export default function RootLayout({
   children,
 }: {
@@ -22,7 +22,7 @@ export default function RootLayout({
     <html suppressHydrationWarning lang="en">
       <head />
       {/* Apply rubik.className so the whole site uses Rubik (served from Next.js) */}
-      <body className={`bg-[#FCFCFC] dark:bg-black text-[#1A1A1A] text-[18px] ${rubik.className}`}>
+      <body className={`bg-[#FFF] dark:bg-black text-[#1A1A1A] text-[18px] ${rubik.className}`}>
         <Providers>
           <div className="isolate">
             <Header />
@@ -35,3 +35,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+import { Providers } from "./providers";

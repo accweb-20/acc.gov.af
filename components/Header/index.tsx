@@ -6,7 +6,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { sanityClient, getSanityImageUrl } from "../../sanity/lib/client";
-import { useLang } from "@/context/LanguageContext";
 
 type SanityLink = {
   linkType?: "internal" | "external";
@@ -43,15 +42,34 @@ const LANGS = [
 ];
 
 export default function Header(): JSX.Element {
-  const { lang, setLang } = useLang();
-
   const [data, setData] = useState<HeaderDoc | null>(null);
   const [navbarOpen, setNavbarOpen] = useState(false);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  // IMPORTANT: initialize to a server-safe deterministic value
+  const [lang, setLang] = useState<string>("en");
+
+  // read saved language on client after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const stored = localStorage.getItem("site_lang");
+    if (stored && stored !== lang) {
+      setLang(stored);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // run once on mount
+
+  // persist lang to localStorage when it changes (client-side only)
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("site_lang", lang);
+  }, [lang]);
+
   const [langOpen, setLangOpen] = useState(false);
   const pathname = usePathname();
   const mobileRef = useRef<HTMLDivElement | null>(null);
-  const langRef = useRef<HTMLDivElement | null>(null);
+  // Use separate refs for mobile and desktop language elements (avoid assigning same ref twice)
+  const langRefMobile = useRef<HTMLDivElement | null>(null);
+  const langRefDesktop = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setNavbarOpen(false);
@@ -99,8 +117,11 @@ export default function Header(): JSX.Element {
         setNavbarOpen(false);
         setOpenIndex(null);
       }
-      const l = langRef.current;
-      if (langOpen && l && !l.contains(e.target as Node)) {
+
+      // check both language refs (desktop + mobile). If neither contains the click, close lang dropdown.
+      const d = langRefDesktop.current;
+      const m = langRefMobile.current;
+      if (langOpen && !(d?.contains(e.target as Node) || m?.contains(e.target as Node))) {
         setLangOpen(false);
       }
     }
@@ -121,7 +142,7 @@ export default function Header(): JSX.Element {
 
   return (
     <header className="w-full fixed top-0 left-0 z-50 bg-white shadow-sm">
-      <div className="max-w-[1200px] mx-auto px-4">
+      <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px]">
         {/* Use a fixed header height so nav items can occupy full height */}
         <div className="flex items-center justify-between h-16">
           {/* Logo + small-screen language area */}
@@ -139,7 +160,7 @@ export default function Header(): JSX.Element {
             </Link>
 
             {/* Small-screen language dropdown (styled options require custom UI) */}
-            <div className="block lg:hidden" ref={langRef}>
+            <div className="block hidden" ref={langRefMobile}>
               <div className="relative inline-block">
                 <button
                   type="button"
@@ -173,10 +194,10 @@ export default function Header(): JSX.Element {
                         key={l.value}
                         role="option"
                         onClick={() => {
-                          setLang(l.value as any);
+                          setLang(l.value);
                           setLangOpen(false);
                         }}
-                        onKeyDown={(e) => e.key === "Enter" && (setLang(l.value as any), setLangOpen(false))}
+                        onKeyDown={(e) => e.key === "Enter" && (setLang(l.value), setLangOpen(false))}
                         className="cursor-pointer px-3 py-2 text-sm"
                         style={{ color: "#02587b" }}
                         onMouseEnter={(e) => {
@@ -302,7 +323,7 @@ export default function Header(): JSX.Element {
 
           {/* Right side: desktop language select and mobile toggle */}
           <div className="flex items-center gap-3">
-            <div className="hidden lg:block" ref={langRef}>
+            <div className="hidden " ref={langRefDesktop}>
               <div className="relative inline-block">
                 <button
                   type="button"
@@ -337,10 +358,10 @@ export default function Header(): JSX.Element {
                         key={l.value}
                         role="option"
                         onClick={() => {
-                          setLang(l.value as any);
+                          setLang(l.value);
                           setLangOpen(false);
                         }}
-                        onKeyDown={(e) => e.key === "Enter" && (setLang(l.value as any), setLangOpen(false))}
+                        onKeyDown={(e) => e.key === "Enter" && (setLang(l.value), setLangOpen(false))}
                         className="cursor-pointer px-3 py-2 text-sm"
                         style={{ color: "#02587b" }}
                         onMouseEnter={(e) => {
@@ -532,10 +553,22 @@ export default function Header(): JSX.Element {
           transform: scaleX(1);
         }
 
+        /* Ensure underline doesn't change layout height */
+        header {
+          /* nothing needed here - pseudo elements are absolutely positioned */
+        }
+
         /* Remove rounding from underlines (force) */
         .nav-link::after {
           border-radius: 0 !important;
         }
+
+        /*
+          IMPORTANT:
+          Native <select> options cannot be reliably styled across browsers.
+          To meet the requirement "Language dropdown's hovered item background color should be #02587B with #F5F5F5 text"
+          this component uses a custom dropdown (native <select> was replaced where visible).
+        */
 
         /* Small screens: hide the pseudo underline animations to avoid layout quirks */
         @media (max-width: 1023px) {
