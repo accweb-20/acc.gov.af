@@ -5,12 +5,6 @@ export default defineType({
   title: "Product",
   type: "document",
   fields: [
-    defineField({
-      name: "title",
-      title: "Title",
-      type: "string",
-      validation: (Rule) => Rule.required().min(2),
-    }),
 
     defineField({
       name: "name",

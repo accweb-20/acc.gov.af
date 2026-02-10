@@ -6,8 +6,8 @@ import ProductsGrid from "@/components/ProductsGrid";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Free Next.js Template for Startup and SaaS",
-  description: "This is Home for Startup Nextjs Template",
+  title: "Afghan Cart State-owned Corporation",
+  description: "We are serving to import, export and sale",
 };
 
 export default function Home() {
