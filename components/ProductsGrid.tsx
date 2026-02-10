@@ -19,6 +19,8 @@ type SanityProduct = {
   order?: number;
 };
 
+export const revalidate = 60; // seconds
+
 async function fetchProducts() {
   const query = `*[_type == "product"] | order(order asc) {
     _id,
