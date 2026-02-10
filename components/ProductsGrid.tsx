@@ -1,8 +1,8 @@
 // components/ProductsGrid.tsx
 import React from "react";
 import ProductCard from "./ProductCard";
-import { client, getImageUrl } from "../sanity/lib/client"; // adapt path if needed
-// removed: import groq from "groq";
+import { client } from "../sanity/lib/client"; // adapt path if needed
+import { getImageUrl } from "../sanity/lib/image"; // IMPORT the helper
 
 type SanityImage = {
   _type?: string;
@@ -20,8 +20,6 @@ type SanityProduct = {
 };
 
 async function fetchProducts() {
-  // fetch 7 items to know if there's more than 6
-  // use a plain string for the query instead of the `groq` tagged template
   const query = `*[_type == "product"] | order(order asc) {
     _id,
     name,
@@ -58,14 +56,14 @@ export default async function ProductsGrid() {
   const hasMore = raw.length > 6;
   const sliced = raw.slice(0, 6);
 
-  // Map products to props for client ProductCard
   const items = sliced.map((p) => {
-    const imageUrl =
-      // `getImageUrl` should return a full URL for the Sanity image asset.
-      // If your helper returns undefined for missing assets, handle that.
-      p.image ? getImageUrl(p.image) : null;
+    // Request a large-enough image from Sanity to avoid client-side upscaling.
+    // 1200-1600px works well for cards in a 3-col layout; you can adjust.
+    const imageUrl = p.image
+      ? getImageUrl(p.image as any, { w: 1400, q: 80, fit: "max" })
+      : null;
 
-    const propertiesText = blocksToPlainText(p.properties).slice(0, 220); // truncate for card
+    const propertiesText = blocksToPlainText(p.properties).slice(0, 220);
     return {
       id: p._id,
       name: p.name ?? null,
@@ -78,18 +76,15 @@ export default async function ProductsGrid() {
   return (
     <section className="my-12 w-full mx-auto md:max-w-[1440px]">
       <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] py-7 md:py-8">
-        <div className="text-[60px] font-bold mb-8" style={{}}>AVAILABLE PRODUCTS</div>
-        {/* Grid with exact 30px gap */}
+        <div className="text-[60px] font-bold mb-8">AVAILABLE PRODUCTS</div>
+
         <div
           className="grid"
           style={{
             gap: "30px",
-            gridTemplateColumns:
-              "repeat(1, minmax(0, 1fr))", // default mobile
+            gridTemplateColumns: "repeat(1, minmax(0, 1fr))",
           }}
         >
-          {/* Responsive CSS — we can't write media queries inline dynamically for server render,
-              so use a small style block to set breakpoints specifically for this grid */}
           <style
             dangerouslySetInnerHTML={{
               __html: `
@@ -102,7 +97,10 @@ export default async function ProductsGrid() {
               `,
             }}
           />
-          <div className="products-grid-responsive" style={{ display: "grid", gap: "30px" }}>
+          <div
+            className="products-grid-responsive"
+            style={{ display: "grid", gap: "30px" }}
+          >
             {items.map((it) => (
               <ProductCard
                 key={it.id}
@@ -116,7 +114,6 @@ export default async function ProductsGrid() {
           </div>
         </div>
 
-        {/* Read More if more than 6 */}
         {hasMore && (
           <div className="mt-8 flex justify-center">
             <a
