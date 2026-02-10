@@ -23,7 +23,7 @@ export default function ProductCard({
     <article
       className="group relative bg-white rounded-none"
       style={{
-        boxShadow: "0 6px 16px rgba(7,15,25,0.06)",
+        boxShadow: "0 16px 16px rgba(7,15,25,0.06)",
       }}
     >
       {/* image wrapper */}
