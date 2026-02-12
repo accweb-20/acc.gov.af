@@ -170,11 +170,7 @@ export default defineType({
                               title: "Internal reference",
                               type: "reference",
                               to: [
-                                { type: "policy" },
-                              { type: "annualReport" },
-                              { type: "slider" },
-                              { type: "header" },
-                              { type: "footer" },
+                              { type: "aboutUs" },
                               ],
                             }),
                             defineField({

@@ -87,11 +87,7 @@ export default defineType({
                             title: "Internal reference",
                             type: "reference",
                             to: [
-                              { type: "policy" },
-                              { type: "annualReport" },
-                              { type: "slider" },
-                              { type: "header" },
-                              { type: "footer" },
+                              { type: "aboutUs" },
                             ],
                             description:
                               "Reference to any document type in the Studio. The frontend can resolve the slug dynamically.",
