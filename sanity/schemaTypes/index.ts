@@ -6,5 +6,6 @@ import policy from "./policy";
 import header from "./header";
 import footer from "./footer";
 import product from './product';
+import aboutUs from './aboutUs';
 
-export const schema = [slider, annualReport, policy, header, footer, product];
+export const schema = [slider, annualReport, policy, header, footer, product, aboutUs];
