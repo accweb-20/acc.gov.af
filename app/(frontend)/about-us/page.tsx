@@ -193,7 +193,7 @@ export default async function AboutUsPage() {
     </section>
   );
 
-  // Layout container sizes as requested by you
+  // Layout container sizes 
   const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <section className="my-12 w-full mx-auto md:max-w-[1440px]">
       <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] py-7 md:py-8">
@@ -223,8 +223,10 @@ export default async function AboutUsPage() {
       </Container>
 
       {/* TOPICS - card grid */}
-      <Container>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-20 -mt-12 text-[#F5F5F5]">
+      
+      <section className="w-full mx-auto bg-[#E0E8EB] text-[#F5F5F5] py-12 font-rubik">
+        <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-20 mt-12">
           {topics.length === 0 ? (
             <div className="text-sm text-gray-600">No topics available.</div>
           ) : (
@@ -245,7 +247,8 @@ export default async function AboutUsPage() {
               })
           )}
         </div>
-      </Container>
+        </div>
+      </section>
 
       {/* END SECTION */}
       <Container>
