@@ -89,6 +89,7 @@ export default defineType({
                   type: "reference",
                   to: [
                     { type: "aboutUs" },
+                    { type: "contactUs" },
                   ],
                 }),
                 defineField({
@@ -167,6 +168,7 @@ export default defineType({
                               type: "reference",
                               to: [
                               { type: "aboutUs" },
+                              { type: "contactUs" },
                               ],
                             }),
                             defineField({

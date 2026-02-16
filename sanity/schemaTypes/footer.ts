@@ -88,6 +88,7 @@ export default defineType({
                             type: "reference",
                             to: [
                               { type: "aboutUs" },
+                              { type: "contactUs" },
                             ],
                             description:
                               "Reference to any document type in the Studio. The frontend can resolve the slug dynamically.",
