@@ -53,7 +53,7 @@ export default function ContactForm(): React.ReactElement {
   ];
 
   // Shadows
-  const normalShadow = "0 1px 4px rgba(0,0,0,0.12), 0 -1px 4px rgba(0,0,0,0.06)";
+  const normalShadow = "0 1px 4px rgba(2, 88, 123,0.2), 0 -1px 4px rgba(2, 88, 123,0.2)";
   const errorShadow = "0 1px 4px rgba(246,0,0,0.22), 0 -1px 4px rgba(246,0,0,0.26)";
 
   // Apply single-element CSS shake (reflow trick) — used for server errors or explicit shakes
@@ -216,7 +216,7 @@ export default function ContactForm(): React.ReactElement {
   }
 
   return (
-    <div className="w-[85%] md:w-[88%] lg:w-[80%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] mx-auto text-[#1A1A1A] font-rubik">
+    <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] text-[#1A1A1A] font-rubik">
       <style>{`
         @keyframes shakeX {
           0% { transform: translateX(0); }
@@ -359,7 +359,7 @@ export default function ContactForm(): React.ReactElement {
                 type="submit"
                 disabled={loading}
                 style={{
-                  backgroundColor: "#FED21C",
+                  backgroundColor: "#F4BA00",
                   clipPath: "polygon(0 0, 100% 20%, 100% 100%, 0% 100%)",
                 }}
                 className="inline-block px-8 py-2 cursor-pointer font-bold text-[16px] text-[#1A1A1A] disabled:opacity-60"
@@ -379,21 +379,21 @@ export default function ContactForm(): React.ReactElement {
         <aside className="text-sm">
           <div className="mb-6">
             <div className="font-bold text-base mb-1">Find US</div>
-            <div className="text-gray-700">160 Harehills Lane, Leeds, LS8 5JP</div>
+            <div className="text-gray-700">Khawaja Rawash Sreet, Custom Road, 9th Zoon, Kabul, Afghanistan</div>
           </div>
 
           <div className="mb-6">
             <div className="font-bold text-base mb-1">Email Us</div>
             <div>
-              <a href="mailto:info@humanreliefmission.com" className="text-gray-700 hover:underline">
-                info@humanreliefmission.com
+              <a href="mailto:info@acc.gov.af" className="text-gray-700 hover:underline">
+                info@acc.gov.af
               </a>
             </div>
           </div>
 
           <div className="mb-6">
             <div className="font-bold text-base mb-1">Call Us</div>
-            <div className="text-gray-700">0300 0300 160</div>
+            <div className="text-gray-700">020 292 4696</div>
           </div>
 
           <div>
