@@ -2,13 +2,13 @@
 import { defineType, defineField, defineArrayMember } from 'sanity';
 
 export default defineType({
-  name: 'page',
-  title: 'Pages',
+  name: 'contactUs',
+  title: 'Contact Us',
   type: 'document',
   fields: [
     defineField({
       name: 'title',
-      title: 'Page Title',
+      title: 'Contact Title',
       type: 'string',
       validation: (Rule) => Rule.required(),
     }),
