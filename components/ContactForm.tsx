@@ -47,9 +47,9 @@ export default function ContactForm(): React.ReactElement {
   } as const;
 
   const icons = [
-    { src: "/icons/social-media/facebook.svg", alt: "Facebook", href: "https://www.facebook.com/afghancart1" },
+    { src: "/icons/social-media/Facebook.svg", alt: "Facebook", href: "https://www.facebook.com/afghancart1" },
     { src: "/icons/social-media/instagram.svg", alt: "Instagram", href: "https://www.instagram.com/afghancartcorportation/?hl=en" },
-    { src: "/icons/social-media/x.svg", alt: "X", href: "https://x.com/Afghancart" },
+    { src: "/icons/social-media/X.svg", alt: "X", href: "https://x.com/Afghancart" },
   ];
 
   // Shadows
