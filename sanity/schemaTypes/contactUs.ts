@@ -56,13 +56,13 @@ export default defineType({
     // ✅ Intro background color checkbox
     defineField({
       name: 'introBackground',
-      title: 'Intro Purple Background Color',
-      description: 'Enable Purple background color for intro section',
+      title: 'Intro Deep Teal Blue Background Color',
+      description: 'Enable Deep Teal Blue background color for intro section',
       type: 'object',
       fields: [
         defineField({
           name: 'enabled',
-          title: 'Enable purple background color',
+          title: 'Enable Deep Teal Blue background color',
           type: 'boolean',
           initialValue: false,
         }),

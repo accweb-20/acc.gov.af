@@ -237,14 +237,6 @@ export default function ContactForm(): React.ReactElement {
         .icon-hover:hover { animation: iconShake 550ms ease-in-out; transform-origin: center; }
       `}</style>
 
-      {/* Heading + description above the grid so the aside starts aligned with first input */}
-      <div className="mb-6">
-        <h2 className="text-[30px] md:text-[65px] leading-none font-extrabold tracking-wide text-[#1A1A1A] mb-6">Any questions?</h2>
-        <p className="mt-2 text-[#1A1A1A] text-[18px] max-w-2xl">
-          Fill out the form below and follow us on social media for the last updates and feedback
-        </p>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
         {/* LEFT: Form */}
         <div>
