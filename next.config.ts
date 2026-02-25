@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
+     domains: ["cdn.sanity.io"],
     // recommended: prefer remotePatterns for more control
     remotePatterns: [
       {

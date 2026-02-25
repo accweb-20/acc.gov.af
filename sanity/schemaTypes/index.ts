@@ -9,5 +9,6 @@ import product from './product';
 import home from './home';
 import aboutUs from './aboutUs';
 import contactUs from './contactUs';
+import imports from './import';
 
-export const schema = [slider, annualReport, policy, header, footer, product, home, aboutUs, contactUs];
+export const schema = [slider, annualReport, policy, header, footer, product, home, aboutUs, contactUs, imports];
