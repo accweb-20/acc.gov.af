@@ -83,12 +83,12 @@ export default function ImportHeader({ title, subtitle, heroImageUrl, heroImage 
       */}
       <div
         style={{  backgroundColor: "#02587B" }}
-        className="w-full mx-auto text-center flex flex-col justify-end px-4 min-h-[280px] md:min-h-[420px] lg:min-h-[420px] -mt-[120px] md:-mt-[240px] lg:-mt-[240px]"
+        className="w-full mx-auto text-center flex flex-col justify-end px-4 min-h-[280px] md:min-h-[420px] lg:min-h-[420px] -mt-[120px] md:-mt-[240px] lg:-mt-[220px]"
       >
         <div className="my-6 mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1440px] py-7 md:py-8">
           
               <div className="text-[#F5F5F5] ">
-                <h1 className="font-rubik-dirt text-[45px] md:text-[72px] lg:text-[48px] leading-tight opacity-90">
+                <h1 className="font-rubik-dirt text-[45px] md:text-[72px] lg:text-[90px] leading-tight opacity-90">
                   {title ?? "Import Page"}
                 </h1>
                 {subtitle && <p className="mt-2 text-[14px] md:text-[18px] opacity-90">{subtitle}</p>}

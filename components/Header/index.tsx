@@ -249,8 +249,10 @@ export default function Header(): JSX.Element {
                             </span>
                           </button>
 
-                          <div className="absolute left-0 mt-2 w-56 rounded shadow-lg bg-white invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all">
-                            <div className="p-4">
+                          <div className="absolute left-0 w-56 shadow-lg bg-white invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all" 
+                            style={{ boxShadow: "0 6px 6px -4px rgba(0,0,0,0.25), 4px 0 6px -4px rgba(0,0,0,0.25), -4px 0 6px -4px rgba(0,0,0,0.25)",}}
+                          >
+                            <div className="px-4">
                               {item.submenu?.introText && <div className="mb-2 text-sm">{item.submenu.introText}</div>}
                               <ul>
                                 {item.submenu?.items?.map((si, k) => {

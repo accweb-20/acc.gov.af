@@ -5,7 +5,6 @@ import { sanityClient } from "@/sanity/lib/client";
 import Link from "next/link";
 import DownloadButton from "@/components/DownloadButton";
 
-
 export const revalidate = 60;
 
 // ---------- Metadata (simple fallback) ----------
@@ -31,25 +30,39 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 // Types for Portable Text-like blocks (small subset used for rendering)
-type Span = { _type?: string; text?: string; marks?: string[] };
+type Span = { _type?: string; text?: string; marks?: string[]; _key?: string };
 type MarkDef = { _key?: string; href?: string; url?: string };
-type Block = { _type?: string; style?: string; children?: Span[]; markDefs?: MarkDef[]; assetUrl?: string; alt?: string };
+type Block = {
+  _type?: string;
+  style?: string;
+  children?: Span[];
+  markDefs?: MarkDef[];
+  assetUrl?: string;
+  alt?: string;
+  listItem?: "bullet" | "number";
+  _key?: string;
+};
 
-// Helper to render inline marks (strong, em, links)
+// Helper to render inline marks (strong, em, underline, code, links)
 const renderSpan = (child: Span, markDefs?: MarkDef[], keyBase = "") => {
   const text = typeof child?.text === "string" ? child.text : "";
   const marks = Array.isArray(child?.marks) ? child.marks : [];
   let node: React.ReactNode = text;
 
+  // Wrap marks in order (left-to-right)
   for (const mark of marks) {
     if (mark === "strong") node = <strong key={`${keyBase}-strong`}>{node}</strong>;
     else if (mark === "em") node = <em key={`${keyBase}-em`}>{node}</em>;
+    else if (mark === "underline") node = <u key={`${keyBase}-underline`}>{node}</u>;
+    else if (mark === "code") node = <code key={`${keyBase}-code`} className="rounded px-1 py-[0.08rem] text-sm font-mono bg-gray-100">{node}</code>;
     else {
       const md = Array.isArray(markDefs) ? markDefs.find((d) => d._key === mark) : undefined;
       if (md && (md.href || md.url)) {
         const href = (md.href ?? md.url) as string;
+        // open external links in new tab
+        const external = /^https?:\/\//.test(href);
         node = (
-          <a key={`${keyBase}-a`} href={href} target="_blank" rel="noopener noreferrer" className="underline">
+          <a key={`${keyBase}-a`} href={href} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined} className="underline text-blue-600">
             {node}
           </a>
         );
@@ -62,6 +75,7 @@ const renderSpan = (child: Span, markDefs?: MarkDef[], keyBase = "") => {
   return <React.Fragment key={keyBase}>{node}</React.Fragment>;
 };
 
+// Render a single block (non-list)
 const renderBlock = (block: Block, i: number) => {
   if (!block || typeof block !== "object") return null;
 
@@ -91,7 +105,42 @@ const renderBlock = (block: Block, i: number) => {
   return null;
 };
 
-const renderBlocks = (blocks?: Block[] | null) => (Array.isArray(blocks) ? blocks.map((b, idx) => renderBlock(b, idx)) : null);
+// New: renderBlocks supports lists (group consecutive listItem blocks)
+const renderBlocks = (blocks?: Block[] | null) => {
+  if (!Array.isArray(blocks)) return null;
+  const out: React.ReactNode[] = [];
+  let i = 0;
+  while (i < blocks.length) {
+    const blk = blocks[i];
+    if (!blk) { i++; continue; }
+
+    // handle list group
+    if (blk._type === "block" && blk.listItem) {
+      const listType = blk.listItem === "bullet" ? "ul" : "ol";
+      const items: React.ReactNode[] = [];
+      let j = i;
+      while (j < blocks.length && (blocks[j]?._type === "block") && (blocks[j] as Block).listItem === blk.listItem) {
+        const b = blocks[j] as Block;
+        const children = Array.isArray(b.children) ? b.children.map((c, idx) => renderSpan(c, b.markDefs, `li-${j}-${idx}`)) : null;
+        items.push(<li key={b._key ?? j} className="mb-1">{children}</li>);
+        j++;
+      }
+      out.push(
+        <div key={`list-${i}`} className="my-3">
+          {listType === "ul" ? <ul className="list-disc pl-6">{items}</ul> : <ol className="list-decimal pl-6">{items}</ol>}
+        </div>
+      );
+      i = j;
+      continue;
+    }
+
+    // fallback to normal block rendering
+    out.push(renderBlock(blk, i));
+    i++;
+  }
+
+  return out;
+};
 
 // ---- Page component ----
 export default async function AboutUsPage() {
@@ -343,7 +392,6 @@ export default async function AboutUsPage() {
           </div>
         </div>
       </section>
-
 
       {/* Simple footer CTA */}
       <section className="py-10 w-full max-w-[1440px] mx-auto bg-white">

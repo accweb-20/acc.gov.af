@@ -90,6 +90,7 @@ export default defineType({
                   to: [
                     { type: "aboutUs" },
                     { type: "contactUs" },
+                    { type: "import" },
                   ],
                 }),
                 defineField({
@@ -169,6 +170,7 @@ export default defineType({
                               to: [
                               { type: "aboutUs" },
                               { type: "contactUs" },
+                              { type: "import" },
                               ],
                             }),
                             defineField({
