@@ -163,7 +163,7 @@ export default async function Page() {
       >
         <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] py-12">
           <div className="max-w-[920px]">
-            {data.bodyTitle && <h2 className="text-[26px] md:text-[36px] font-extrabold mb-6">{data.bodyTitle}</h2>}
+            {data.bodyTitle && <h2 className="text-[45px] md:text-[60px] font-extrabold mb-6">{data.bodyTitle}</h2>}
             {data.bodyMessage && (
               <div className="prose prose-sm sm:prose lg:prose-lg max-w-none text-[#1A1A1A]">
                 <PortableTextServer value={(data.bodyMessage as unknown[]) ?? []} />
