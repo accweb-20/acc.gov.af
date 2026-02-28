@@ -5,6 +5,9 @@ import ImportHeader from "@/components/Import/ImportHeader";
 import ImportIntro from "@/components/Import/ImportIntro";
 import ImportsGrid from "@/components/Import/ImportsGrid";
 import { getImageUrl } from "@/sanity/lib/client";
+import { Metadata } from "next";
+
+export const revalidate = 60; // revalidate every 60s (ISR). Use 'force-dynamic' if you want always-fresh.
 
 type ImportDoc = {
   title?: string;
@@ -18,6 +21,11 @@ type ImportDoc = {
   bodyTitle?: string;
   bodyMessage?: unknown[];
   bodyBackground?: { enabled?: boolean };
+  seo?: {
+    seoTitle?: string;
+    metaDescription?: string;
+    keywords?: string[];
+  };
 };
 
 type Child = { _key?: string; text?: string; marks?: string[]; [k: string]: any };
@@ -112,7 +120,7 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
 
     // image block
     if (blk._type === "image" || blk.asset || blk.url) {
-      const url = getImageUrl(blk) ?? blk.asset?.url ?? blk.url ?? null;
+      const url = (typeof getImageUrl === "function" ? getImageUrl(blk) : null) ?? blk.asset?.url ?? blk.url ?? null;
       const alt = blk.alt ?? "";
       if (url) {
         out.push(
@@ -131,6 +139,40 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
   }
 
   return <>{out}</>;
+}
+
+/**
+ * generateMetadata — pulls SEO fields from Sanity and returns Metadata for Next
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const q = `*[_type == "import"][0]{title, subtitle, heroImage, seo}`;
+    const data = (await client.fetch(q)) as ImportDoc | null;
+    if (!data) return { title: "Import" };
+
+    const seoTitle = data.seo?.seoTitle ?? data.title ?? "Import";
+    const description = data.seo?.metaDescription ?? data.subtitle ?? undefined;
+
+    const images: { url: string }[] = [];
+    if (data.heroImage) {
+      const url = (typeof getImageUrl === "function" ? getImageUrl(data.heroImage) : null) ?? null;
+      if (url) images.push({ url });
+    }
+
+    const metadata: Metadata = {
+      title: seoTitle,
+      description,
+      openGraph: {
+        title: seoTitle,
+        description,
+        images: images.length > 0 ? images : undefined,
+      },
+    };
+    return metadata;
+  } catch (err) {
+    // safe fallback
+    return { title: "Import" };
+  }
 }
 
 export default async function Page() {
