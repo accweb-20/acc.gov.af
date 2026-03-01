@@ -1,4 +1,3 @@
-// schemaTypes/import.ts
 import { defineType, defineField, defineArrayMember } from 'sanity';
 
 export default defineType({
@@ -27,10 +26,20 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
 
+    // --- separate hero images for desktop and mobile ---
     defineField({
-      name: 'heroImage',
-      title: 'Hero Image',
+      name: 'desktopHero',
+      title: 'Desktop Hero Image',
       type: 'image',
+      description: 'Hero image used on large screens (desktop/tablet landscape).',
+      options: { hotspot: true },
+    }),
+
+    defineField({
+      name: 'mobileHero',
+      title: 'Mobile Hero Image',
+      type: 'image',
+      description: 'Hero image used on small screens (phones / narrow viewports).',
       options: { hotspot: true },
     }),
 

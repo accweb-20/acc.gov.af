@@ -13,7 +13,10 @@ type ImportDoc = {
   title?: string;
   subtitle?: string;
   slug?: { current?: string };
-  heroImage?: unknown; // pass whole object to header
+  // prefer new fields; keep heroImage as fallback for older docs
+  desktopHero?: unknown;
+  mobileHero?: unknown;
+  heroImage?: unknown; // fallback
   introTitle?: string;
   introMessage?: unknown[];
   introBackground?: { enabled?: boolean };
@@ -146,7 +149,7 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
  */
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const q = `*[_type == "import"][0]{title, subtitle, heroImage, seo}`;
+    const q = `*[_type == "import"][0]{title, subtitle, desktopHero, mobileHero, heroImage, seo}`;
     const data = (await client.fetch(q)) as ImportDoc | null;
     if (!data) return { title: "Import" };
 
@@ -154,8 +157,11 @@ export async function generateMetadata(): Promise<Metadata> {
     const description = data.seo?.metaDescription ?? data.subtitle ?? undefined;
 
     const images: { url: string }[] = [];
-    if (data.heroImage) {
-      const url = (typeof getImageUrl === "function" ? getImageUrl(data.heroImage) : null) ?? null;
+
+    // prefer desktopHero -> mobileHero -> heroImage (fallback)
+    const pickImage = data.desktopHero ?? data.mobileHero ?? data.heroImage ?? null;
+    if (pickImage) {
+      const url = (typeof getImageUrl === "function" ? getImageUrl(pickImage) : null) ?? null;
       if (url) images.push({ url });
     }
 
@@ -177,7 +183,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Page() {
   const q = `*[_type == "import"][0]{
-    title, subtitle, heroImage, introTitle, introMessage, introBackground, bodyTitle, bodyMessage, bodyBackground,
+    title, subtitle, desktopHero, mobileHero, heroImage, introTitle, introMessage, introBackground, bodyTitle, bodyMessage, bodyBackground,
     imports[]{ _key, title, description, image, order, "slug": slug.current }
   }`;
 
@@ -189,7 +195,15 @@ export default async function Page() {
 
   return (
     <main>
-      <ImportHeader title={data.title} subtitle={data.subtitle} heroImage={data.heroImage} />
+      {/* Pass Sanity objects to the header; header will build URLs itself */}
+      <ImportHeader
+        title={data.title}
+        subtitle={data.subtitle}
+        desktopHero={data.desktopHero}
+        mobileHero={data.mobileHero}
+        // optional fallback - header already prefers explicit desktop/mobile, but keeping heroImage won't hurt if you later change header to use it
+        // heroImage={data.heroImage}
+      />
 
       <ImportIntro
         introTitle={data.introTitle}
