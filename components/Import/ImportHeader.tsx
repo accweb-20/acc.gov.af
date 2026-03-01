@@ -69,31 +69,30 @@ export default function ImportHeader({
     <header className="relative w-full" style={{ marginTop: 64 }}>
       {/* Hero image container */}
       <div className="overflow-hidden mx-auto w-[90%] md:w-[93%] lg:w-[70%] max-w-[493px] md:max-w-[924px] lg:max-w-[924px]">
-        {/* Use two images and tailwind responsive utilities to show one per breakpoint.
-            - mobile image is shown on small screens (block md:hidden)
-            - desktop image is shown on md+ screens (hidden md:block)
-            This approach is simple and predictable; it also lets you control which source loads for which viewport.
+        {/* Two variants:
+            - mobile: show the whole portrait without cropping (block on small screens)
+            - desktop: show cover-style on md+ screens
         */}
-        <div className="relative w-full h-[230px] md:h-[360px] lg:h-[320px]">
+        <div className="relative w-full">
+          {/* MOBILE: show full portrait (no crop). Use a regular <img> to preserve aspect ratio. */}
           {resolvedMobile ? (
-            <div className="block md:hidden absolute inset-0">
-              <Image
+            <div className="block md:hidden w-full flex justify-center items-start">
+              {/* Constrain height so very tall portraits don't overflow; allow width to scale naturally */}
+              <img
                 src={resolvedMobile}
-                fill
                 alt={title ?? "Hero image (mobile)"}
-                sizes="100vw"
-                style={{ objectFit: "cover", objectPosition: "center" }}
-                quality={85}
-                priority
+                className="max-w-full h-auto max-h-[70vh] rounded-md object-contain"
+                style={{ display: "block" }}
                 draggable={false}
               />
             </div>
           ) : (
-            <div className="block md:hidden w-full h-full bg-gray-200" />
+            <div className="block md:hidden w-full h-[230px] bg-gray-200" />
           )}
 
-          {resolvedDesktop ? (
-            <div className="hidden md:block absolute inset-0">
+          {/* DESKTOP: cover-style using next/image (unchanged) */}
+          <div className="hidden md:block relative w-full h-[230px] md:h-[360px] lg:h-[320px]">
+            {resolvedDesktop ? (
               <Image
                 src={resolvedDesktop}
                 fill
@@ -104,10 +103,10 @@ export default function ImportHeader({
                 priority
                 draggable={false}
               />
-            </div>
-          ) : (
-            <div className="hidden md:block w-full h-full bg-gray-200" />
-          )}
+            ) : (
+              <div className="w-full h-full bg-gray-200" />
+            )}
+          </div>
         </div>
       </div>
 
