@@ -85,7 +85,7 @@ export default function Header(): JSX.Element {
           logo{asset->{_id, url}},
           logoAlt,
           logoLink,
-          navItems[]{
+          navItems[] {
             order,
             title,
             showSubmenu,
@@ -110,8 +110,39 @@ export default function Header(): JSX.Element {
     };
   }, []);
 
+  /**
+   * CLICK / TOUCH OUTSIDE HANDLING
+   *
+   * Problem: mobile browsers sometimes synthesize a `click` after a touch/scroll gesture.
+   * If the user scrolls, a synthetic click may fire and be interpreted as a real tap outside
+   * the menu, causing the menu to close unexpectedly. To avoid that we:
+   *  - track whether a touchmove has happened (touchMovedRef)
+   *  - ignore subsequent `click` events that immediately follow touchmove (they're likely synthetic)
+   *
+   * This keeps the "click outside to close" behavior for genuine taps, but avoids closing the menu
+   * during/after scrolling gestures.
+   */
   useEffect(() => {
+    // track whether a touch move/drag happened recently
+    const touchMovedRef = { current: false } as { current: boolean };
+
+    function onTouchStart() {
+      // reset movement flag on new touch
+      touchMovedRef.current = false;
+    }
+    function onTouchMove() {
+      // user moved finger — treat subsequent click as synthetic and ignore it
+      touchMovedRef.current = true;
+    }
+
     function onDocClick(e: MouseEvent) {
+      // If a touchmove just happened, ignore this click (likely synthetic after scrolling)
+      if (touchMovedRef.current) {
+        // reset for next gesture and bail out
+        touchMovedRef.current = false;
+        return;
+      }
+
       const el = mobileRef.current;
       if (navbarOpen && el && !el.contains(e.target as Node)) {
         setNavbarOpen(false);
@@ -125,8 +156,17 @@ export default function Header(): JSX.Element {
         setLangOpen(false);
       }
     }
+
+    // Add listeners
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchmove", onTouchMove, { passive: true });
     document.addEventListener("click", onDocClick);
-    return () => document.removeEventListener("click", onDocClick);
+
+    return () => {
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("click", onDocClick);
+    };
   }, [navbarOpen, langOpen]);
 
   const toggleSub = (i: number) => setOpenIndex((prev) => (prev === i ? null : i));
