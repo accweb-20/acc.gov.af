@@ -11,5 +11,6 @@ import aboutUs from './aboutUs';
 import contactUs from './contactUs';
 import imports from './import';
 import exportPage from './export';
+import sales from './sales';
 
-export const schema = [slider, annualReport, policy, header, footer, product, home, aboutUs, contactUs, imports, exportPage];
+export const schema = [slider, annualReport, policy, header, footer, product, home, aboutUs, contactUs, imports, exportPage, sales];

@@ -1,7 +1,7 @@
-// sanity/schemaTypes/export.ts
+// sanity/schemaTypes/sales.ts
 export default {
-  name: "export",
-  title: "Export Page",
+  name: "sales",
+  title: "Sales Page",
   type: "document",
   fields: [
     { name: "title", title: "Title", type: "string" },
@@ -13,13 +13,20 @@ export default {
       title: "Desktop Hero Image",
       type: "image",
       options: { hotspot: true },
+      fields: [
+        { name: "alt", title: "Alt text", type: "string" },
+      ],
     },
     {
       name: "mobileHero",
       title: "Mobile Hero Image",
       type: "image",
       options: { hotspot: true },
+      fields: [
+        { name: "alt", title: "Alt text", type: "string" },
+      ],
     },
+
     // intro block
     { name: "introTitle", title: "Intro Title", type: "string" },
     { name: "introMessage", title: "Intro Message", type: "array", of: [{ type: "block" }, { type: "image" }] },
@@ -30,16 +37,16 @@ export default {
       fields: [{ name: "enabled", title: "Enabled", type: "boolean", initialValue: false }],
     },
 
-    // exports grid
+    // sales grid
     {
-      name: "exports",
-      title: "Export Items",
+      name: "sales",
+      title: "Sales Items",
       type: "array",
       of: [
         {
           type: "object",
-          name: "exportItem",
-          title: "Export Item",
+          name: "salesItem",
+          title: "Sales Item",
           fields: [
             { name: "title", title: "Title", type: "string" },
             { name: "description", title: "Description", type: "array", of: [{ type: "block" }, { type: "image" }] },
