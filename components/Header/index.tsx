@@ -129,16 +129,6 @@ export default function Header(): JSX.Element {
     return () => document.removeEventListener("click", onDocClick);
   }, [navbarOpen, langOpen]);
 
-  // Lock page scroll when mobile menu is open
-  useEffect(() => {
-    if (typeof document !== "undefined") {
-      document.body.style.overflow = navbarOpen ? "hidden" : "";
-    }
-    return () => {
-      if (typeof document !== "undefined") document.body.style.overflow = "";
-    };
-  }, [navbarOpen]);
-
   const toggleSub = (i: number) => setOpenIndex((prev) => (prev === i ? null : i));
 
   const resolveLink = (ln?: SanityLink | null) => {
@@ -414,13 +404,8 @@ export default function Header(): JSX.Element {
       </div>
 
       {/* Mobile menu */}
-      {/* NOTE: changed from inset-0 to top-16 bottom-0 so it sits under the fixed header and remains fixed while scrolling */}
-      <div
-        ref={mobileRef}
-        className={`fixed left-0 right-0 top-16 bottom-0 z-40 transition-transform duration-300 ${navbarOpen ? "translate-y-0" : "-translate-y-full"}`}
-        aria-hidden={!navbarOpen}
-      >
-        <div className="w-full h-full bg-white px-4 py-1.5 overflow-auto">
+      <div ref={mobileRef} className={`fixed inset-0 z-40 transition-transform duration-300 ${navbarOpen ? "translate-y-0" : "-translate-y-full"}`}>
+        <div className="w-full min-h-screen bg-white px-4 py-1.5 overflow-auto">
           <div className="flex items-center justify-between mb-6">
             <div>
               {data ? (

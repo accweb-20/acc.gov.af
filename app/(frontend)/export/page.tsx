@@ -1,26 +1,25 @@
-// app/import/page.tsx
+// app/export/page.tsx
 import React from "react";
-import { client } from "@/sanity/lib/client"; // keep your client import
-import PageHeader from "@/components/PageHeader"; // <- replaced ImportHeader with reusable PageHeader
-import ImportIntro from "@/components/Import/ImportIntro";
-import ImportsGrid from "@/components/Import/ImportsGrid";
+import { client } from "@/sanity/lib/client";
+import PageHeader from "@/components/PageHeader";
+import ExportIntro from "@/components/Export/ExportIntro";
+import ExportsGrid from "@/components/Export/ExportsGrid";
 import { getImageUrl } from "@/sanity/lib/client";
 import { Metadata } from "next";
 
-export const revalidate = 60; // revalidate every 60s (ISR). Use 'force-dynamic' if you want always-fresh.
+export const revalidate = 60;
 
-type ImportDoc = {
+type ExportDoc = {
   title?: string;
   subtitle?: string;
   slug?: { current?: string };
-  // prefer new fields; keep heroImage as fallback for older docs
   desktopHero?: unknown;
   mobileHero?: unknown;
-  heroImage?: unknown; // fallback
+  heroImage?: unknown;
   introTitle?: string;
   introMessage?: unknown[];
   introBackground?: { enabled?: boolean };
-  imports?: Array<Record<string, unknown>> | null;
+  exports?: Array<Record<string, unknown>> | null;
   bodyTitle?: string;
   bodyMessage?: unknown[];
   bodyBackground?: { enabled?: boolean };
@@ -90,7 +89,6 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
     const blk = value[i] as Block | undefined;
     if (!blk) { i++; continue; }
 
-    // lists
     if (blk._type === "block" && blk.listItem) {
       const listType = blk.listItem === "bullet" ? "ul" : "ol";
       const items: React.ReactNode[] = [];
@@ -107,7 +105,6 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
       continue;
     }
 
-    // blocks
     if (blk._type === "block") {
       const style = (blk as any).style ?? "normal";
       const children = renderChildren(blk.children, blk.markDefs);
@@ -121,7 +118,6 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
       continue;
     }
 
-    // image block
     if (blk._type === "image" || blk.asset || blk.url) {
       const url = (typeof getImageUrl === "function" ? getImageUrl(blk) : null) ?? blk.asset?.url ?? blk.url ?? null;
       const alt = blk.alt ?? "";
@@ -137,28 +133,22 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
       continue;
     }
 
-    // fallback
     i++;
   }
 
   return <>{out}</>;
 }
 
-/**
- * generateMetadata — pulls SEO fields from Sanity and returns Metadata for Next
- */
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const q = `*[_type == "import"][0]{title, subtitle, desktopHero, mobileHero, heroImage, seo}`;
-    const data = (await client.fetch(q)) as ImportDoc | null;
-    if (!data) return { title: "Import" };
+    const q = `*[_type == "export"][0]{title, subtitle, desktopHero, mobileHero, heroImage, seo}`;
+    const data = (await client.fetch(q)) as ExportDoc | null;
+    if (!data) return { title: "Export" };
 
-    const seoTitle = data.seo?.seoTitle ?? data.title ?? "Import";
+    const seoTitle = data.seo?.seoTitle ?? data.title ?? "Export";
     const description = data.seo?.metaDescription ?? data.subtitle ?? undefined;
 
     const images: { url: string }[] = [];
-
-    // prefer desktopHero -> mobileHero -> heroImage (fallback)
     const pickImage = data.desktopHero ?? data.mobileHero ?? data.heroImage ?? null;
     if (pickImage) {
       const url = (typeof getImageUrl === "function" ? getImageUrl(pickImage) : null) ?? null;
@@ -176,43 +166,38 @@ export async function generateMetadata(): Promise<Metadata> {
     };
     return metadata;
   } catch (err) {
-    // safe fallback
-    return { title: "Import" };
+    return { title: "Export" };
   }
 }
 
 export default async function Page() {
-  const q = `*[_type == "import"][0]{
+  const q = `*[_type == "export"][0]{
     title, subtitle, desktopHero, mobileHero, heroImage, introTitle, introMessage, introBackground, bodyTitle, bodyMessage, bodyBackground,
-    imports[]{ _key, title, description, image, order, "slug": slug.current }
+    exports[]{ _key, title, description, image, order, "slug": slug.current }
   }`;
 
-  const data = (await client.fetch(q)) as ImportDoc | null;
+  const data = (await client.fetch(q)) as ExportDoc | null;
 
-  if (!data) return <div className="p-8">Import page not found.</div>;
+  if (!data) return <div className="p-8">Export page not found.</div>;
 
-  const importsRaw: Record<string, unknown>[] = Array.isArray(data.imports) ? data.imports : [];
+  const exportsRaw: Record<string, unknown>[] = Array.isArray(data.exports) ? data.exports : [];
 
   return (
     <main>
-      {/* Pass Sanity objects to the header; PageHeader will build URLs itself */}
       <PageHeader
         title={data.title}
         subtitle={data.subtitle}
         desktopHero={data.desktopHero}
         mobileHero={data.mobileHero}
-        // If you want to use the legacy heroImage as a fallback, PageHeader will still accept it:
-        // desktopHero={data.desktopHero ?? data.heroImage}
-        // mobileHero={data.mobileHero ?? data.heroImage}
       />
 
-      <ImportIntro
+      <ExportIntro
         introTitle={data.introTitle}
         introMessage={(data.introMessage as unknown[]) ?? []}
         introBackgroundEnabled={!!data.introBackground?.enabled}
       />
 
-      <ImportsGrid importsArr={importsRaw} />
+      <ExportsGrid exportsArr={exportsRaw} />
 
       <section
         className={`w-full mx-auto`}

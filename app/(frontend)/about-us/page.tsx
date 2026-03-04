@@ -4,6 +4,7 @@ import { Metadata } from "next";
 import { sanityClient } from "@/sanity/lib/client";
 import Link from "next/link";
 import DownloadButton from "@/components/DownloadButton";
+import PageHeader from "@/components/PageHeader";
 
 export const revalidate = 60;
 
@@ -153,7 +154,6 @@ export default async function AboutUsPage() {
     "introBody": introBody[]{..., "assetUrl": asset->url},
     contentTitle,
     "contentBody": contentBody[]{..., "assetUrl": asset->url},
-    // IMPORTANT: topics are inline objects in the schema, so fetch them as inline objects (NOT using -> which dereferences references)
     topics[]{topicTitle, "topicBody": topicBody[]{..., "assetUrl": asset->url}},
     endTitle,
     "endBody": endBody[]{..., "assetUrl": asset->url},
@@ -200,49 +200,7 @@ export default async function AboutUsPage() {
   const endTitle = doc?.endTitle ?? "";
   const endBody = Array.isArray(doc?.endBody) ? (doc.endBody as Block[]) : [];
 
-  // ---------- HERO ( full-image black overlay, no boxed title) ----------
-  const Hero = () => (
-    <section className="relative w-full mt-16">
-      <picture>
-        {desktopHero && <source media="(min-width:1024px)" srcSet={desktopHero} />}
-        {mobileHero && <source media="(max-width:1023px)" srcSet={mobileHero} />}
-        {/* fallback - use desktopHero or mobileHero or empty */}
-        <img
-          src={desktopHero ?? mobileHero ?? ""}
-          alt={title}
-          className="w-full object-cover"
-        />
-      </picture>
-
-      {/* Full-image overlay: subtle vertical gradient -> darkens the whole image (spread black color) */}
-      <div
-        aria-hidden
-        className="absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.5) 50%, rgba(0,0,0,0.4) 100%)",
-          // ensure overlay sits above image
-          pointerEvents: "none",
-        }}
-      />
-      
-      {/* Centered title directly on overlay. Large text with wide text-shadow so shadow 'spreads' */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <h1
-          className="text-[70px] md:text-[90px] lg:text-[180px] font-getronde  text-[#F5F5F5] text-center px-4"
-          style={{
-            textShadow:
-              "0 6px 20px rgba(0,0,0,0.6), 0 18px 50px rgba(0,0,0,0.4), 0 0 60px rgba(0,0,0,0.35)",
-            lineHeight: 1.02,
-          }}
-        >
-          {title}
-        </h1>
-      </div>
-    </section>
-  );
-
-  // Layout container sizes 
+  // Layout container sizes
   const Container: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <section className="my-12 w-full mx-auto md:max-w-[1440px]">
       <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] py-7 md:py-8">
@@ -253,7 +211,14 @@ export default async function AboutUsPage() {
 
   return (
     <main className="bg-white text-[#1A1A1A] font-rubik">
-      <Hero />
+      {/* Use the shared PageHeader component */}
+      <PageHeader
+        title={title}
+        subtitle={doc?.subtitle ?? undefined}
+        desktopHero={desktopHero}
+        mobileHero={mobileHero}
+        // you can pass overlayColor, priority, containerMaxWidth props if needed
+      />
 
       {/* INTRO */}
       <Container>
@@ -272,30 +237,29 @@ export default async function AboutUsPage() {
       </Container>
 
       {/* TOPICS - card grid */}
-      
       <section className="w-full mx-auto bg-[#E0E8EB] text-[#F5F5F5] py-12 font-rubik">
         <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px]">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-20 mt-12">
-          {topics.length === 0 ? (
-            <div className="text-sm text-gray-600">No topics available.</div>
-          ) : (
-            topics
-              .filter(Boolean)
-              .map((t: any, idx: number) => {
-                const key = t?._id ?? idx;
-                const topicTitle = typeof t?.topicTitle === "string" ? t.topicTitle : "";
-                const topicBody = Array.isArray(t?.topicBody) ? t.topicBody : [];
-                return (
-                  <article key={key} className="bg-[#02587B] shadow-lg p-12 hover:shadow-3xl transition-shadow duration-300">
-                    {topicTitle ? <h3 className="text-[20px] md:text-[24px] font-bold mb-3">{topicTitle}</h3> : null}
-                    <div className="prose max-w-none" style={{ textAlign: "justify" }}>
-                      {renderBlocks(topicBody)}
-                    </div>
-                  </article>
-                );
-              })
-          )}
-        </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-20 mt-12">
+            {topics.length === 0 ? (
+              <div className="text-sm text-gray-600">No topics available.</div>
+            ) : (
+              topics
+                .filter(Boolean)
+                .map((t: any, idx: number) => {
+                  const key = t?._id ?? idx;
+                  const topicTitle = typeof t?.topicTitle === "string" ? t.topicTitle : "";
+                  const topicBody = Array.isArray(t?.topicBody) ? t.topicBody : [];
+                  return (
+                    <article key={key} className="bg-[#02587B] shadow-lg p-12 hover:shadow-3xl transition-shadow duration-300">
+                      {topicTitle ? <h3 className="text-[20px] md:text-[24px] font-bold mb-3">{topicTitle}</h3> : null}
+                      <div className="prose max-w-none" style={{ textAlign: "justify" }}>
+                        {renderBlocks(topicBody)}
+                      </div>
+                    </article>
+                  );
+                })
+            )}
+          </div>
         </div>
       </section>
 
@@ -320,7 +284,6 @@ export default async function AboutUsPage() {
                 <div className="text-sm text-[#F5F5F5]">No annual reports available.</div>
               ) : (
                 annuals.map((a) => {
-                  // prefer originalFilename from Sanity, fallback to last segment of URL
                   const filename =
                     (a.title && String(a.title)) ??
                     (a.pdfUrl && String(a.pdfUrl).split("/").pop()) ??

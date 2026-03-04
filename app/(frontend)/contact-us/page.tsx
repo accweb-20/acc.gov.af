@@ -1,6 +1,6 @@
 // app/contact-us/page.tsx
 import React from "react";
-import ContactHero from "./ContactHero"; // relative import (component placed next to page.tsx)
+import PageHeader from "@/components/PageHeader";
 import ContactForm from "@/components/ContactForm";
 import { sanityClient } from "@/sanity/lib/client";
 
@@ -25,7 +25,8 @@ async function getContactData() {
     title,
     subtitle,
     slug,
-    heroImage,
+    "desktopHero": desktopHero.asset->url,
+    "mobileHero": mobileHero.asset->url,
     introTitle,
     introMessage,
     "introBackgroundEnabled": introBackground.enabled,
@@ -105,7 +106,7 @@ function PortableTextRenderer({ value }: { value?: Block[] | null }) {
       continue;
     }
 
-    // image block fallback: Sanity image object may be shaped differently; try common props
+    // image block fallback
     if (blk._type === "image" || (blk as any).asset?.url || (blk as any).url) {
       const src = (blk as any).asset?.url ?? (blk as any).url ?? undefined;
       const alt = (blk as any).alt ?? "";
@@ -139,10 +140,13 @@ export default async function Page() {
 
   return (
     <main className="">
-      {/* Hero */}
-      <section className="my-12 w-full mx-auto md:max-w-[1440px] bg-[#02587B] h-[520px]">
-        <ContactHero />
-      </section>
+      {/* Use shared PageHeader instead of ContactHero */}
+      <PageHeader
+        title={contact?.title ?? "Contact Us"}
+        subtitle={contact?.subtitle ?? undefined}
+        desktopHero={contact?.desktopHero ?? null}
+        mobileHero={contact?.mobileHero ?? null}
+      />
 
       {/* Intro (render only when content exists in Sanity) */}
       {hasIntroContent && (
