@@ -141,7 +141,7 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const q = `*[_type == "sales"][0]{title, subtitle, desktopHero, mobileHero, heroImage, seo}`;
+    const q = `*[_type == "sales" && slug.current == $slug][0]{title, subtitle, desktopHero, mobileHero, heroImage, seo}`;
     const data = (await client.fetch(q)) as SalesDoc | null;
     if (!data) return { title: "Sales" };
 
@@ -171,7 +171,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
-  const q = `*[_type == "sales"][0]{
+  const q = `*[_type == "sales" && slug.current == $slug][0]{
     title, subtitle, desktopHero, mobileHero, heroImage, introTitle, introMessage, introBackground, bodyTitle, bodyMessage, bodyBackground,
     sales[]{ _key, title, description, image, order, "slug": slug.current }
   }`;

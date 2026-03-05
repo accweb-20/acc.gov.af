@@ -141,7 +141,7 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const q = `*[_type == "export"][0]{title, subtitle, desktopHero, mobileHero, heroImage, seo}`;
+    const q = `*[_type == "export" && slug.current == $slug][0]{title, subtitle, desktopHero, mobileHero, heroImage, seo}`;
     const data = (await client.fetch(q)) as ExportDoc | null;
     if (!data) return { title: "Export" };
 
@@ -171,7 +171,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
-  const q = `*[_type == "export"][0]{
+  const q = `*[_type == "export" && slug.current == $slug][0]{
     title, subtitle, desktopHero, mobileHero, heroImage, introTitle, introMessage, introBackground, bodyTitle, bodyMessage, bodyBackground,
     exports[]{ _key, title, description, image, order, "slug": slug.current }
   }`;
