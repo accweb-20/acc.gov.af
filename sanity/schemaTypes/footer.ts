@@ -90,6 +90,8 @@ export default defineType({
                               { type: "aboutUs" },
                               { type: "contactUs" },
                               { type: "import" },
+                              { type: "export" },
+                              { type: "sales" },
                             ],
                             description:
                               "Reference to any document type in the Studio. The frontend can resolve the slug dynamically.",
