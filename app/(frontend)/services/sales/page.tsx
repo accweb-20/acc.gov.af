@@ -1,15 +1,15 @@
-// app/export/page.tsx
+// app/sales/page.tsx
 import React from "react";
 import { client } from "@/sanity/lib/client";
 import PageHeader from "@/components/PageHeader";
-import ExportIntro from "@/components/Export/ExportIntro";
-import ExportsGrid from "@/components/Export/ExportsGrid";
+import SalesIntro from "@/components/Sales/SalesIntro";
+import SalesGrid from "@/components/Sales/SalesGrid";
 import { getImageUrl } from "@/sanity/lib/client";
 import { Metadata } from "next";
 
 export const revalidate = 60;
 
-type ExportDoc = {
+type SalesDoc = {
   title?: string;
   subtitle?: string;
   slug?: { current?: string };
@@ -19,7 +19,7 @@ type ExportDoc = {
   introTitle?: string;
   introMessage?: unknown[];
   introBackground?: { enabled?: boolean };
-  exports?: Array<Record<string, unknown>> | null;
+  sales?: Array<Record<string, unknown>> | null;
   bodyTitle?: string;
   bodyMessage?: unknown[];
   bodyBackground?: { enabled?: boolean };
@@ -141,11 +141,11 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const q = `*[_type == "export" && slug.current == $slug][0]{title, subtitle, desktopHero, mobileHero, heroImage, seo}`;
-    const data = (await client.fetch(q)) as ExportDoc | null;
-    if (!data) return { title: "Export" };
+    const q = `*[_type == "sales"][0]{title, subtitle, desktopHero, mobileHero, heroImage, seo}`;
+    const data = (await client.fetch(q)) as SalesDoc | null;
+    if (!data) return { title: "Sales" };
 
-    const seoTitle = data.seo?.seoTitle ?? data.title ?? "Export";
+    const seoTitle = data.seo?.seoTitle ?? data.title ?? "Sales";
     const description = data.seo?.metaDescription ?? data.subtitle ?? undefined;
 
     const images: { url: string }[] = [];
@@ -166,21 +166,21 @@ export async function generateMetadata(): Promise<Metadata> {
     };
     return metadata;
   } catch (err) {
-    return { title: "Export" };
+    return { title: "Sales" };
   }
 }
 
 export default async function Page() {
-  const q = `*[_type == "export" && slug.current == $slug][0]{
+  const q = `*[_type == "sales"][0]{
     title, subtitle, desktopHero, mobileHero, heroImage, introTitle, introMessage, introBackground, bodyTitle, bodyMessage, bodyBackground,
-    exports[]{ _key, title, description, image, order, "slug": slug.current }
+    sales[]{ _key, title, description, image, order, "slug": slug.current }
   }`;
 
-  const data = (await client.fetch(q)) as ExportDoc | null;
+  const data = (await client.fetch(q)) as SalesDoc | null;
 
-  if (!data) return <div className="p-8">Export page not found.</div>;
+  if (!data) return <div className="p-8">Sales page not found.</div>;
 
-  const exportsRaw: Record<string, unknown>[] = Array.isArray(data.exports) ? data.exports : [];
+  const salesRaw: Record<string, unknown>[] = Array.isArray(data.sales) ? data.sales : [];
 
   return (
     <main>
@@ -191,13 +191,13 @@ export default async function Page() {
         mobileHero={data.mobileHero}
       />
 
-      <ExportIntro
+      <SalesIntro
         introTitle={data.introTitle}
         introMessage={(data.introMessage as unknown[]) ?? []}
         introBackgroundEnabled={!!data.introBackground?.enabled}
       />
 
-      <ExportsGrid exportsArr={exportsRaw} />
+      <SalesGrid salesArr={salesRaw} />
 
       <section
         className={`w-full mx-auto`}
