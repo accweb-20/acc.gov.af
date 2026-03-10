@@ -93,6 +93,8 @@ export default defineType({
                     { type: "import" },
                     { type: "export" },
                     { type: "sales" },
+                    { type: "photosPage" },
+                    { type: "videosPage" },
                   ],
                 }),
                 defineField({
@@ -175,6 +177,8 @@ export default defineType({
                               { type: "import" },
                               { type: "export" },
                               { type: "sales" },
+                              { type: "photosPage" },
+                              { type: "videosPage" },
                               ],
                             }),
                             defineField({
