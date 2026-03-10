@@ -97,13 +97,7 @@ export default function VideoModal({
               <div className="text-white">No video</div>
             )}
 
-            {titleCentered && (
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white/95 text-center px-4" style={{ textShadow: "0 6px 18px rgba(0,0,0,0.7)" }}>
-                  {item.title ?? ""}
-                </h3>
-              </div>
-            )}
+            
           </div>
 
           {!titleCentered && (
