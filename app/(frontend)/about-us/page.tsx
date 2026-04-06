@@ -213,7 +213,7 @@ export default async function AboutUsPage() {
     <main className="bg-white text-[#1A1A1A] font-rubik">
       {/* Use the shared PageHeader component */}
       <PageHeader
-        title={title}
+        title={""}
         subtitle={doc?.subtitle ?? undefined}
         desktopHero={desktopHero}
         mobileHero={mobileHero}
