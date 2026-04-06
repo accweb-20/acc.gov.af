@@ -228,7 +228,7 @@ export default async function Home() {
             )}
 
             {Array.isArray(home?.introMessage) && home.introMessage.length > 0 && (
-              <div className="prose mt-2 max-w-2xl">
+              <div className="prose mt-2 text-justify">
                 <PortableTextRenderer value={home.introMessage} />
               </div>
             )}
