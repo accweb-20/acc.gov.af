@@ -144,13 +144,13 @@ export default defineType({
     // ✅ Body background color checkbox
     defineField({
       name: 'bodyBackground',
-      title: 'Body Purple Background Color',
-      description: 'Enable Purple background color for body section',
+      title: 'Body Deep Teal Blue Background Color',
+      description: 'Enable Deep Teal Blue background color for body section',
       type: 'object',
       fields: [
         defineField({
           name: 'enabled',
-          title: 'Enable purple background color',
+          title: 'Enable Deep Teal Blue background color',
           type: 'boolean',
           initialValue: false,
         }),

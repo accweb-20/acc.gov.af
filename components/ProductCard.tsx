@@ -58,7 +58,7 @@ export default function ProductCard({
         {propertiesText && (
           <p className="text-[#02587b] font-bold text-sm leading-relaxed">
             {propertiesText} <br />
-            Price: <span className="text-[#1A1A1A] text-[26px]">{price}</span>
+            {/*Price: <span className="text-[#1A1A1A] text-[26px]">{price}</span>*/}
           </p>
         )}
       </div>

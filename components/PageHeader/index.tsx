@@ -92,7 +92,7 @@ export default function PageHeader({
               <img
                 src={resolvedMobile}
                 alt={`${altText} (mobile)`}
-                className="max-w-full h-auto max-h-[70vh] rounded-md object-contain"
+                className="max-w-full h-auto max-h-[70vh] object-contain"
                 style={{ display: "block" }}
                 draggable={false}
               />
