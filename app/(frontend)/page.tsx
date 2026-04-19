@@ -3,8 +3,9 @@ import React from "react";
 import ScrollUp from "@/components/Common/ScrollUp";
 import Hero from "@/components/Hero";
 import Slider from "@/components/Slider";
-import ProductsGrid from "@/components/ProductsGrid";
+import ProductsGrid, { ProductGridItem } from "@/components/ProductsGrid";
 import { sanityClient } from "@/sanity/lib/client";
+import { getImageUrl } from "../../sanity/lib/image"; // IMPORT the helper
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -41,7 +42,54 @@ async function getHomeData() {
   }`);
 }
 
-// Types for portable text
+type SanityImage = {
+  _type?: string;
+  asset?: { _ref?: string; _type?: string; url?: string };
+};
+
+type SanityProduct = {
+  _id: string;
+  title?: string;
+  name?: string;
+  price?: string | number;
+  image?: SanityImage;
+  properties?: any[];
+  order?: number;
+};
+
+async function fetchProducts() {
+  const query = `*[_type == "product"] | order(order asc) {
+    _id,
+    name,
+    price,
+    image,
+    properties,
+    order
+  }[0...7]`;
+
+  const products: SanityProduct[] = await sanityClient.fetch(query);
+  return products;
+}
+
+function blocksToPlainText(blocks: any[] | undefined) {
+  if (!blocks || !Array.isArray(blocks)) return "";
+  const texts: string[] = [];
+
+  for (const block of blocks) {
+    if (block?._type === "block" && Array.isArray(block.children)) {
+      const line = block.children
+        .map((child: any) => (child.text ? child.text : ""))
+        .join("");
+      if (line.trim()) texts.push(line.trim());
+    } else if (typeof block === "string") {
+      texts.push(block);
+    }
+  }
+
+  return texts.join("\n\n");
+}
+
+// Server-side PortableText renderer (handles lists, headings, images, marks)
 type Span = { _key?: string; _type?: string; text?: string; marks?: string[] };
 type MarkDef = { _key?: string; href?: string; url?: string };
 type Block = {
@@ -53,7 +101,6 @@ type Block = {
   _key?: string;
 };
 
-// Inline renderer
 function renderChildren(children?: Span[], markDefs?: MarkDef[]) {
   if (!Array.isArray(children)) return null;
 
@@ -97,7 +144,6 @@ function renderChildren(children?: Span[], markDefs?: MarkDef[]) {
   });
 }
 
-// Server-side PortableText renderer (handles lists, headings, images, marks)
 function PortableTextRenderer({ value }: { value?: Block[] | null }) {
   if (!Array.isArray(value) || value.length === 0) return null;
 
@@ -111,7 +157,6 @@ function PortableTextRenderer({ value }: { value?: Block[] | null }) {
       continue;
     }
 
-    // lists
     if (blk._type === "block" && blk.listItem) {
       const listType = blk.listItem === "bullet" ? "ul" : "ol";
       const items: React.ReactNode[] = [];
@@ -178,7 +223,6 @@ function PortableTextRenderer({ value }: { value?: Block[] | null }) {
       continue;
     }
 
-    // image block (fallback)
     if (blk._type === "image" || (blk as any).asset?.url || (blk as any).url) {
       const src = (blk as any).asset?.url ?? (blk as any).url ?? undefined;
       const alt = (blk as any).alt ?? "";
@@ -203,6 +247,22 @@ function PortableTextRenderer({ value }: { value?: Block[] | null }) {
 
 export default async function Home() {
   const home = await getHomeData();
+
+  const rawProducts = await fetchProducts();
+  const hasMoreProducts = rawProducts.length > 6;
+
+  const productItems: ProductGridItem[] = rawProducts.slice(0, 6).map((p) => {
+    const imageUrl = p.image ? getImageUrl(p.image as any, { w: 1400, q: 80, fit: "max" }) : null;
+    const propertiesText = blocksToPlainText(p.properties).slice(0, 220);
+
+    return {
+      id: p._id,
+      name: p.name ?? null,
+      price: p.price ?? null,
+      imageUrl,
+      propertiesText,
+    };
+  });
 
   const hasIntroContent = Boolean(
     home && (home.introTitle || (Array.isArray(home.introMessage) && home.introMessage.length > 0))
@@ -236,7 +296,7 @@ export default async function Home() {
         </section>
       )}
 
-      <ProductsGrid />
+      <ProductsGrid items={productItems} hasMore={hasMoreProducts} readMoreHref="/all-items" />
 
       {hasBodyContent && (
         <section className={`w-full mx-auto md:max-w-[1440px] ${home?.bodyBackgroundEnabled ? "bg-[#02587B] text-[#F5F5F5]" : ""}`}>

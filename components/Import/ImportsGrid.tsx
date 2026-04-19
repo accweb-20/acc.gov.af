@@ -61,9 +61,9 @@ export default function ImportsGrid({
   return (
     <section id="imports" className="w-full mx-auto mt-10 text-[#1A1A1A] bg-white">
       <div className="flex justify-center">
-        <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1440px]">
+        <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] py-7 md:py-8">
           <h2 className="text-[45px] md:text-[60px] leading-none font-extrabold tracking-wide text-[#1A1A1A] mb-6">
-            IMPORT ITEMS
+            IMPORT ITEMS 
           </h2>
 
           {sorted.length === 0 ? (
