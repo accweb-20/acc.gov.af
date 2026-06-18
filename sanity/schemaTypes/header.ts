@@ -93,6 +93,7 @@ export default defineType({
                               { type: "slider" },
                               { type: "header" },
                               { type: "footer" },
+                              { type: "tender"},
                   ],
                 }),
                 defineField({
@@ -175,6 +176,7 @@ export default defineType({
                               { type: "slider" },
                               { type: "header" },
                               { type: "footer" },
+                              { type: "tender"},
                               ],
                             }),
                             defineField({
