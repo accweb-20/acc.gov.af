@@ -120,7 +120,7 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
               "radial-gradient(circle at 20% 20%, rgba(244,186,0,0.35) 0, transparent 24%), radial-gradient(circle at 80% 30%, rgba(255,255,255,0.12) 0, transparent 18%), linear-gradient(135deg, rgba(255,255,255,0.08), rgba(0,0,0,0))",
           }}
         />
-        <div className="relative mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] py-16 md:py-20">
+        <div className="relative mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] py-16 md:py-20 mt-4">
           <p className="inline-flex items-center rounded-full border border-white/20 bg-white/10 px-4 py-2 text-xs md:text-sm tracking-[0.3em] uppercase">
             Announcements
           </p>
