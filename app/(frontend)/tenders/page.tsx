@@ -161,7 +161,7 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
               <p className="mt-2 text-sm md:text-base text-slate-600">
                 {isArchivedView
                   ? "These tenders have passed their expiration date."
-                  : "Only active tenders are shown here."}
+                  : "Only active tenders are shown here."} 
               </p>
             </div>
 
@@ -224,7 +224,7 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
                             </span>
                           </div>
 
-                          <h3 className="mt-5 text-[24px] md:text-[28px] font-extrabold leading-tight text-[#0F172A]">
+                          <h3 dir="rtl" className="mt-5 text-[24px] md:text-[28px] font-extrabold leading-tight text-[#0F172A]" style={{textAlign: "justify"}}>
                             {t.title ?? "Untitled Tender"}
                           </h3>
 
@@ -289,11 +289,8 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
                               "Open this tender to read the full description, contact details, and attachments."}
                           </p>
 
-                          <div className="mt-6 inline-flex items-center gap-2 font-bold text-[#02587B]">
-                            View details
-                            <span className="transition-transform duration-300 group-hover:translate-x-1">
-                              →
-                            </span>
+                          <div className="font-extrabold text-[#1A1A1A] hover:opacity-95 text-center" style={{ backgroundColor: "#F4BA00", clipPath: "polygon(0 0, 100% 15%, 100% 100%, 0% 100%)", padding: "6px 30px", cursor: "pointer" }}>
+                              View Details
                           </div>
                         </div>
                       </article>
@@ -302,6 +299,16 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
                 })}
             </div>
           )}
+          {isArchivedView ? (
+                <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
+                  <Link
+                    href="/tenders"
+                    className="font-extrabold text-[#1A1A1A] hover:opacity-95" style={{ backgroundColor: "#F4BA00", clipPath: "polygon(0 0, 100% 15%, 100% 100%, 0% 100%)", padding: "6px 30px", cursor: "pointer" }}
+                  >
+                    Active Tenders List
+                  </Link>
+                </div>
+              ) : null}
 
           {totalItems > 0 ? (
             <div className="mt-10 flex flex-col items-center gap-5">
@@ -355,7 +362,7 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <Link
                     href="/tenders?view=archived"
-                    className="inline-flex items-center justify-center rounded-full bg-[#F4BA00] px-5 py-3 text-sm font-extrabold text-[#1A1A1A] shadow-sm transition hover:opacity-90"
+                    className="font-extrabold text-[#1A1A1A] hover:opacity-95" style={{ backgroundColor: "#F4BA00", clipPath: "polygon(0 0, 100% 15%, 100% 100%, 0% 100%)", padding: "6px 30px", cursor: "pointer" }}
                   >
                     Archived Tenders List
                   </Link>
