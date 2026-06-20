@@ -6,7 +6,7 @@ import ProductsGrid from "@/components/ProductsGrid";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Afghan Cart State-owned Corportion",
+  title: "Afghan Cart Corportion",
   description: "We are serving to import, export and sale",
 };
 

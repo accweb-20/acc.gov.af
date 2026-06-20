@@ -365,7 +365,7 @@ export default function Footer() {
             {doc?.copyrightText ? (
               <span>{doc.copyrightText}</span>
             ) : (
-              <span>Copyright © {new Date().getFullYear()} – Afghan Cart State-Owned Corporation</span>
+              <span>Copyright © {new Date().getFullYear()} – Afghan Cart Corporation</span>
             )}
           </div>
 

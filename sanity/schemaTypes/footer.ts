@@ -144,8 +144,8 @@ export default defineType({
       name: "copyrightText",
       title: "Copyright text",
       type: "string",
-      description: "E.g. 'Copyright © 2026 Afghan Cart State-owned Corporation'",
-      initialValue: "Copyright © 2026 Afghan Cart State-owned Corporation",
+      description: "E.g. 'Copyright © 2026 Afghan Cart Corporation'",
+      initialValue: "Copyright © 2026 Afghan Cart Corporation",
     }),
     
     // admin notes
