@@ -1,4 +1,3 @@
-// app/tenders/page.tsx
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -21,10 +20,10 @@ type TenderListItem = {
 };
 
 type TendersPageProps = {
-  searchParams?: {
+  searchParams?: Promise<{
     page?: string;
     view?: string;
-  };
+  }>;
 };
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -53,14 +52,16 @@ const isExpiredTender = (tender: TenderListItem, now: Date) => {
 
 const buildPageHref = (page: number, view: "active" | "archived") => {
   const params = new URLSearchParams();
+
   if (page > 1) params.set("page", String(page));
   if (view === "archived") params.set("view", "archived");
+
   const query = params.toString();
   return query ? `/tenders?${query}` : "/tenders";
 };
 
 export default async function TendersPage({ searchParams }: TendersPageProps) {
-  const params = searchParams ?? {};
+  const params = (await searchParams) ?? {};
   const view = params.view === "archived" ? "archived" : "active";
 
   const pageParam = Number.parseInt(params.page ?? "1", 10);
@@ -128,7 +129,7 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
               Tenders
             </h1>
             <p className="mt-5 text-base md:text-lg text-white/80 max-w-2xl">
-              Explore current opportunities, view complete tender details, and download attachments.
+              Explore current opportunities, view complete tender details, and download attachments from one clean, Sanity-powered listing.
             </p>
           </div>
 
@@ -222,7 +223,7 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
                             </span>
                           </div>
 
-                          <h3 dir="rtl" className="mt-5 text-[18px] md:text-[22px] font-extrabold leading-tight text-[#0F172A]" style={{ textAlign: "justify" }}>
+                          <h3 className="mt-5 text-[24px] md:text-[28px] font-extrabold leading-tight text-[#0F172A]">
                             {t.title ?? "Untitled Tender"}
                           </h3>
 
@@ -288,9 +289,10 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
                           </p>
 
                           <div className="mt-6 inline-flex items-center gap-2 font-bold text-[#02587B]">
-                            <button className="font-extrabold text-[#1A1A1A] hover:opacity-95" style={{ backgroundColor: "#F4BA00", clipPath: "polygon(0 0, 100% 15%, 100% 100%, 0% 100%)", padding: "6px 30px", cursor: "pointer" }}>
-                              View Details
-                            </button>
+                            View details
+                            <span className="transition-transform duration-300 group-hover:translate-x-1">
+                              →
+                            </span>
                           </div>
                         </div>
                       </article>
@@ -303,10 +305,7 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
           {totalItems > 0 ? (
             <div className="mt-10 flex flex-col items-center gap-5">
               {totalPages > 1 ? (
-                <nav
-                  className="flex flex-wrap items-center justify-center gap-2"
-                  aria-label="Tenders pagination"
-                >
+                <nav className="flex flex-wrap items-center justify-center gap-2" aria-label="Tenders pagination">
                   <Link
                     href={buildPageHref(Math.max(safeCurrentPage - 1, 1), view)}
                     className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
@@ -355,7 +354,8 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
                 <div className="flex flex-wrap items-center justify-center gap-3">
                   <Link
                     href="/tenders?view=archived"
-                    className="font-extrabold text-[#1A1A1A] hover:opacity-95" style={{ backgroundColor: "#F4BA00", clipPath: "polygon(0 0, 100% 15%, 100% 100%, 0% 100%)", padding: "7px 40px", cursor: "pointer" }}>
+                    className="inline-flex items-center justify-center rounded-full bg-[#F4BA00] px-5 py-3 text-sm font-extrabold text-[#1A1A1A] shadow-sm transition hover:opacity-90"
+                  >
                     Archived Tenders List
                   </Link>
                 </div>

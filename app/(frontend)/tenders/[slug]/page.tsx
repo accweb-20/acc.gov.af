@@ -1,20 +1,34 @@
-// app/tenders/[slug]/page.tsx
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import DownloadButton from "@/components/DownloadButton";
 import { sanityClient } from "@/sanity/lib/client";
+import { PortableText, type PortableTextComponents } from "@portabletext/react";
 
 export const revalidate = 60;
 
-type Span = { _type?: string; text?: string; marks?: string[] };
-type MarkDef = { _key?: string; href?: string; url?: string };
-type Block = {
+type PortableTextSpan = {
+  _type?: "span";
+  text?: string;
+  marks?: string[];
+};
+
+type PortableTextMarkDef = {
+  _key?: string;
+  _type?: string;
+  href?: string;
+  url?: string;
+};
+
+type PortableTextBlock = {
+  _key?: string;
   _type?: string;
   style?: string;
-  children?: Span[];
-  markDefs?: MarkDef[];
+  children?: PortableTextSpan[];
+  markDefs?: PortableTextMarkDef[];
+  listItem?: string;
+  level?: number;
   assetUrl?: string;
   alt?: string;
 };
@@ -38,63 +52,8 @@ type TenderDoc = {
   location?: string;
   type?: string;
   attachments?: Attachment[];
-  description?: Block[];
+  description?: PortableTextBlock[];
 };
-
-const renderSpan = (child: Span, markDefs?: MarkDef[], keyBase = "") => {
-  const text = typeof child?.text === "string" ? child.text : "";
-  const marks = Array.isArray(child?.marks) ? child.marks : [];
-  let node: React.ReactNode = text;
-
-  for (const mark of marks) {
-    if (mark === "strong") node = <strong key={`${keyBase}-strong`}>{node}</strong>;
-    else if (mark === "em") node = <em key={`${keyBase}-em`}>{node}</em>;
-    else {
-      const md = Array.isArray(markDefs) ? markDefs.find((d) => d._key === mark) : undefined;
-      if (md && (md.href || md.url)) {
-        const href = (md.href ?? md.url) as string;
-        node = (
-          <a key={`${keyBase}-a`} href={href} target="_blank" rel="noopener noreferrer" className="underline">
-            {node}
-          </a>
-        );
-      } else {
-        node = <span key={`${keyBase}-span`}>{node}</span>;
-      }
-    }
-  }
-
-  return <React.Fragment key={keyBase}>{node}</React.Fragment>;
-};
-
-const renderBlock = (block: Block, i: number) => {
-  if (!block || typeof block !== "object") return null;
-
-  if (block._type === "image" || typeof block.assetUrl === "string") {
-    const src = typeof block.assetUrl === "string" ? block.assetUrl : undefined;
-    if (!src) return null;
-    return (
-      <div key={`img-${i}`} className="mt-6">
-        <img src={src} alt={block.alt ?? "image"} className="w-full h-auto rounded-2xl object-cover" />
-      </div>
-    );
-  }
-
-  if (block._type === "block" && Array.isArray(block.children)) {
-    const style = block.style ?? "normal";
-    const children = block.children.map((c, idx) => renderSpan(c, block.markDefs, `c-${i}-${idx}`));
-
-    if (style === "h1") return <h1 key={`h1-${i}`} className="text-[30px] md:text-[48px] font-extrabold mt-8 leading-tight">{children}</h1>;
-    if (style === "h2") return <h2 key={`h2-${i}`} className="text-[24px] md:text-[36px] font-semibold mt-8 leading-tight">{children}</h2>;
-    if (style === "h3") return <h3 key={`h3-${i}`} className="text-[20px] md:text-[28px] font-semibold mt-8 leading-tight">{children}</h3>;
-
-    return <p key={`p-${i}`} className="mt-4 text-base md:text-lg leading-8 text-slate-700">{children}</p>;
-  }
-
-  return null;
-};
-
-const renderBlocks = (blocks?: Block[] | null) => (Array.isArray(blocks) ? blocks.map((b, idx) => renderBlock(b, idx)) : null);
 
 const formatDate = (value?: string | null) => {
   if (!value) return "Not specified";
@@ -105,6 +64,83 @@ const formatDate = (value?: string | null) => {
     month: "short",
     day: "2-digit",
   }).format(date);
+};
+
+const isExpiredTender = (expirationDate?: string | null) => {
+  if (!expirationDate) return false;
+  const exp = new Date(expirationDate);
+  return !Number.isNaN(exp.getTime()) ? exp < new Date() : false;
+};
+
+const portableTextComponents: PortableTextComponents = {
+  block: {
+    normal: ({ children }) => (
+      <p className="mt-4 text-base md:text-lg leading-8 text-slate-700">{children}</p>
+    ),
+    h1: ({ children }) => (
+      <h1 className="mt-8 text-[30px] md:text-[48px] font-extrabold leading-tight text-slate-900">
+        {children}
+      </h1>
+    ),
+    h2: ({ children }) => (
+      <h2 className="mt-8 text-[24px] md:text-[36px] font-semibold leading-tight text-slate-900">
+        {children}
+      </h2>
+    ),
+    h3: ({ children }) => (
+      <h3 className="mt-8 text-[20px] md:text-[28px] font-semibold leading-tight text-slate-900">
+        {children}
+      </h3>
+    ),
+    blockquote: ({ children }) => (
+      <blockquote className="mt-5 border-r-4 border-[#02587B] pr-4 text-slate-700 italic">
+        {children}
+      </blockquote>
+    ),
+  },
+  marks: {
+    strong: ({ children }) => <strong className="font-bold text-slate-900">{children}</strong>,
+    em: ({ children }) => <em className="italic">{children}</em>,
+    link: ({ children, value }: any) => {
+      const href = value?.href ?? value?.url;
+      if (!href) return <>{children}</>;
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#02587B] underline"
+        >
+          {children}
+        </a>
+      );
+    },
+  },
+  list: {
+    bullet: ({ children }) => <ul className="mt-4 list-disc pr-6 space-y-2 text-slate-700">{children}</ul>,
+    number: ({ children }) => <ol className="mt-4 list-decimal pr-6 space-y-2 text-slate-700">{children}</ol>,
+  },
+  listItem: {
+    bullet: ({ children }) => <li className="leading-8">{children}</li>,
+    number: ({ children }) => <li className="leading-8">{children}</li>,
+  },
+  types: {
+    image: ({ value }: any) => {
+      const src = value?.assetUrl ?? value?.asset?.url;
+      if (!src) return null;
+
+      return (
+        <div className="my-6">
+          <img
+            src={src}
+            alt={value?.alt ?? "image"}
+            className="w-full h-auto rounded-2xl object-cover"
+          />
+        </div>
+      );
+    },
+  },
+  hardBreak: () => <br />,
 };
 
 export async function generateMetadata(
@@ -123,9 +159,7 @@ export async function generateMetadata(
     const tender = await sanityClient.fetch(query, { slug });
 
     if (!tender) {
-      return {
-        title: "Tender Not Found",
-      };
+      return { title: "Tender Not Found" };
     }
 
     return {
@@ -162,7 +196,10 @@ export default async function TenderDetailPage(
       "url": asset->url,
       "filename": asset->originalFilename
     },
-    description[]{..., "assetUrl": asset->url}
+    description[]{
+      ...,
+      "assetUrl": asset->url
+    }
   }`;
 
   let tender: TenderDoc | null = null;
@@ -178,11 +215,7 @@ export default async function TenderDetailPage(
     notFound();
   }
 
-  const expired =
-    tender.expirationDate && !Number.isNaN(new Date(tender.expirationDate).getTime())
-      ? new Date(tender.expirationDate) < new Date()
-      : false;
-
+  const expired = isExpiredTender(tender.expirationDate);
   const attachments = Array.isArray(tender.attachments) ? tender.attachments : [];
   const descriptionBlocks = Array.isArray(tender.description) ? tender.description : [];
 
@@ -221,7 +254,11 @@ export default async function TenderDetailPage(
               </span>
             </div>
 
-            <h1 dir="rtl" style={{ textAlign: "justify" }} className="mt-5 text-[28px] md:text-[36px] lg:text-[36px] font-extrabold leading-[1.3]">
+            <h1
+              dir="rtl"
+              style={{ textAlign: "justify" }}
+              className="mt-5 text-[28px] md:text-[36px] lg:text-[36px] font-extrabold leading-[1.3]"
+            >
               {tender.title ?? "Untitled Tender"}
             </h1>
 
@@ -256,10 +293,17 @@ export default async function TenderDetailPage(
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-8 space-y-6">
               <section className="rounded-[28px] bg-white p-6 md:p-8 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
-                <h2 className="text-[24px] md:text-[34px] font-extrabold text-[#0F172A]">Description</h2>
-                <div dir="rtl" style={{textAlign: "justify"}} className="mt-3 prose max-w-none">
+                <h2 className="text-[24px] md:text-[34px] font-extrabold text-[#0F172A]">
+                  Description
+                </h2>
+
+                <div
+                  dir="rtl"
+                  style={{ textAlign: "justify" }}
+                  className="mt-4 prose prose-lg max-w-none prose-p:leading-8 prose-strong:font-bold prose-strong:text-slate-900 prose-em:italic prose-headings:text-slate-900 prose-li:leading-8"
+                >
                   {descriptionBlocks.length > 0 ? (
-                    renderBlocks(descriptionBlocks)
+                    <PortableText value={descriptionBlocks} components={portableTextComponents} />
                   ) : (
                     <p className="text-slate-600">No description available.</p>
                   )}
@@ -267,7 +311,9 @@ export default async function TenderDetailPage(
               </section>
 
               <section className="rounded-[28px] bg-white p-6 md:p-8 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
-                <h2 className="text-[24px] md:text-[34px] font-extrabold text-[#0F172A]">Attachments</h2>
+                <h2 className="text-[24px] md:text-[34px] font-extrabold text-[#0F172A]">
+                  Attachments
+                </h2>
 
                 {attachments.length > 0 ? (
                   <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -337,7 +383,9 @@ export default async function TenderDetailPage(
               </section>
 
               <section className="rounded-[28px] bg-white p-6 md:p-7 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
-                <h2 className="text-[22px] md:text-[28px] font-extrabold text-[#0F172A]">Contact Person</h2>
+                <h2 className="text-[22px] md:text-[28px] font-extrabold text-[#0F172A]">
+                  Contact Person
+                </h2>
 
                 <div className="mt-5 space-y-4">
                   <div>
