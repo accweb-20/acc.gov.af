@@ -181,6 +181,7 @@ export default defineType({
                               { type: "photosPage" },
                               { type: "videosPage" },
                               { type: "tender"},
+                              { type: "tendersPage"},
                               ],
                             }),
                             defineField({

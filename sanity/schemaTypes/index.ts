@@ -15,5 +15,6 @@ import sales from './sales';
 import photosPage from './photosPage';
 import videosPage from './videosPage';
 import tender from './tender';
+import tendersPage from './tendersPage';
 
-export const schema = [slider, annualReport, policy, header, footer, product, home, aboutUs, contactUs, imports, exportPage, sales, photosPage, videosPage, tender];
+export const schema = [slider, annualReport, policy, header, footer, product, home, aboutUs, contactUs, imports, exportPage, sales, photosPage, videosPage, tender, tendersPage];
