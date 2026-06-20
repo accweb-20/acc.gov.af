@@ -100,6 +100,34 @@ export default defineType({
       type: "array",
       of: [{ type: "block" }],
     }),
+
+     defineField({
+      name: 'seo',
+      title: 'SEO',
+      type: 'object',
+      fields: [
+        defineField({
+          name: 'seoTitle',
+          title: 'SEO Title',
+          type: 'string',
+        }),
+        defineField({
+          name: 'metaDescription',
+          title: 'Meta Description',
+          type: 'text',
+          rows: 3,
+        }),
+        defineField({
+          name: 'keywords',
+          title: 'Keywords',
+          type: 'array',
+          of: [{ type: 'string' }],
+          options: {
+            layout: 'tags',
+          },
+        }),
+      ],
+    }),
   ],
 
   preview: {
