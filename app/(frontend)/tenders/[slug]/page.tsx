@@ -1,3 +1,4 @@
+// app/(frontend)/tenders/[slug]/page.tsx
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
