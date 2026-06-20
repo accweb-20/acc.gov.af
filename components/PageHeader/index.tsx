@@ -92,7 +92,7 @@ export default function PageHeader({
               <img
                 src={resolvedMobile}
                 alt={`${altText} (mobile)`}
-                className="max-w-full h-auto max-h-[70vh] rounded-md object-contain"
+                className="max-w-full h-auto max-h-[70vh] object-contain"
                 style={{ display: "block" }}
                 draggable={false}
               />
@@ -129,7 +129,7 @@ export default function PageHeader({
         <div className={`my-6 mx-auto w-[90%] md:w-[93%] lg:w-[90%] ${containerMaxWidth} py-7 md:py-8`}>
           <div className="text-[#F5F5F5] ">
             <h1 className="font-rubik-dirt text-[45px] md:text-[72px] lg:text-[90px] leading-tight opacity-90">
-              {title ?? "Page title"}
+              {title ?? ""}
             </h1>
             {subtitle && <p className="mt-2 text-[14px] md:text-[18px] opacity-90">{subtitle}</p>}
             {children && <div className="mt-4">{children}</div>}

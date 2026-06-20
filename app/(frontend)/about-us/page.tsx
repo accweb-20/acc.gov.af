@@ -5,6 +5,7 @@ import { sanityClient } from "@/sanity/lib/client";
 import Link from "next/link";
 import DownloadButton from "@/components/DownloadButton";
 import PageHeader from "@/components/PageHeader";
+import { div } from "framer-motion/client";
 
 export const revalidate = 60;
 
@@ -213,7 +214,7 @@ export default async function AboutUsPage() {
     <main className="bg-white text-[#1A1A1A] font-rubik">
       {/* Use the shared PageHeader component */}
       <PageHeader
-        title={title}
+        title={""}
         subtitle={doc?.subtitle ?? undefined}
         desktopHero={desktopHero}
         mobileHero={mobileHero}
@@ -277,7 +278,10 @@ export default async function AboutUsPage() {
           <h2 className="text-[45px] md:text-[60px] font-extrabold mb-6 text-[#F5F5F5]">DOWNLOADABLES</h2>
 
           {/* Annual reports grid */}
-          <div className="mb-8">
+          {annuals.length ===  0 ? (
+            <span></span>
+          ) : (
+            <div className="mb-8">
             <h3 className="text-[22px] md:text-[28px] font-bold mb-4 text-[#F5F5F5]">ANNUAL REPORTS</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {annuals.length === 0 ? (
@@ -314,6 +318,7 @@ export default async function AboutUsPage() {
               )}
             </div>
           </div>
+          )}
 
           {/* Policies grid */}
           <div className="mt-12">

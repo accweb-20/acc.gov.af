@@ -47,9 +47,10 @@ export default function ContactForm(): React.ReactElement {
   } as const;
 
   const icons = [
-    { src: "/icons/social-media/Facebook.svg", alt: "Facebook", href: "https://www.facebook.com/afghancart1" },
-    { src: "/icons/social-media/instagram.svg", alt: "Instagram", href: "https://www.instagram.com/afghancartcorportation/?hl=en" },
-    { src: "/icons/social-media/X.svg", alt: "X", href: "https://x.com/Afghancart" },
+    { src: "/icons/social-media/Facebook.svg", alt: "Facebook", href: "https://www.facebook.com/share/1J1WLgFsxr/" },
+    { src: "/icons/social-media/instagram.svg", alt: "Instagram", href: "https://www.instagram.com/invites/contact/?utm_source=ig_contact_invite&utm_medium=copy_link&utm_content=ilzn8nn" },
+    { src: "/icons/social-media/X.svg", alt: "X", href: "https://x.com/Afghan_cart" },
+    { src: "/icons/social-media/whatsapp.svg", alt: "WhatsApp Channel", href: "https://whatsapp.com/channel/0029Vb7ulrjKrWQqrIeM4G2v" },
   ];
 
   // Shadows
@@ -371,7 +372,7 @@ export default function ContactForm(): React.ReactElement {
         <aside className="text-sm">
           <div className="mb-6">
             <div className="font-bold text-base mb-1">Find US</div>
-            <div className="text-gray-700">Khawaja Rawash Sreet, Custom Road, 9th Zoon, Kabul, Afghanistan</div>
+            <div className="text-gray-700">Khawaja Rawash Sreet, Next to Kabul Customs Office, 9th Zoon, Kabul, Afghanistan</div>
           </div>
 
           <div className="mb-6">
@@ -385,7 +386,7 @@ export default function ContactForm(): React.ReactElement {
 
           <div className="mb-6">
             <div className="font-bold text-base mb-1">Call Us</div>
-            <div className="text-gray-700">020 292 4696</div>
+            <div className="text-gray-700">020 292 5043 - 0093 74 5700 015</div>
           </div>
 
           <div>
