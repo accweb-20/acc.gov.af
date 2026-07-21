@@ -358,8 +358,11 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
                 </nav>
               ) : null}
 
-              {!isArchivedView ? (
-                <div className="flex flex-wrap items-center justify-center gap-3">
+              
+            </div>
+          ) : null}
+          {!isArchivedView ? (
+                <div className="flex flex-wrap items-center justify-center gap-3 mt-5">
                   <Link
                     href="/tenders?view=archived"
                     className="font-extrabold text-[#1A1A1A] hover:opacity-95" style={{ backgroundColor: "#F4BA00", clipPath: "polygon(0 0, 100% 15%, 100% 100%, 0% 100%)", padding: "6px 30px", cursor: "pointer" }}
@@ -368,8 +371,6 @@ export default async function TendersPage({ searchParams }: TendersPageProps) {
                   </Link>
                 </div>
               ) : null}
-            </div>
-          ) : null}
         </div>
       </section>
     </main>
