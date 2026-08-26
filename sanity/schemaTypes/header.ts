@@ -96,6 +96,7 @@ export default defineType({
                     { type: "photosPage" },
                     { type: "videosPage" },
                     { type: "tender"},
+                    { type: "jobPosting"},
                   ],
                 }),
                 defineField({
@@ -182,6 +183,7 @@ export default defineType({
                               { type: "videosPage" },
                               { type: "tender"},
                               { type: "tendersPage"},
+                              { type: "jobsPage"},
                               ],
                             }),
                             defineField({

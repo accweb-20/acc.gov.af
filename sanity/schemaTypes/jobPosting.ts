@@ -109,9 +109,9 @@ export default defineType({
       options: {
         layout: 'dropdown',
         list: [
-          { title: 'Internal / داخلي / داخلی', value: 'internal' },
-          { title: 'External / بهرنی / خارجی', value: 'external' },
-          { title: 'Internal & External / داخلي او بهرنی / داخلی و خارجی', value: 'both' },
+          { title: 'New Announcement / نوی اعلان / اعلان جدید', value: 'new_announcement' },
+          { title: 'Re-Announcement / بیاځلي اعلان / اعلان مجدد', value: 're_announcement' },
+          
         ],
       },
       initialValue: 'external',
@@ -126,9 +126,7 @@ export default defineType({
         list: [
           { title: 'Full-time / بشپړ وخت / وقت کامل', value: 'full_time' },
           { title: 'Part-time / نیم وخت / وقت جزئی', value: 'part_time' },
-          { title: 'Contract / قراردادي / قراردادی', value: 'contract' },
-          { title: 'Internship / زده‌کړه / کارآموزی', value: 'internship' },
-          { title: 'Temporary / مؤقت / موقت', value: 'temporary' },
+          { title: 'Full-time & Part-time / بشپړ وخت او نیم وخت / وقت کامل و وقت جزئی', value: 'full_tiem_&_part_time' },
         ],
       },
       initialValue: 'full_time',
@@ -202,7 +200,7 @@ export default defineType({
       initialValue: {
         en: 'Organization Salary Scale',
         ps: 'د ادارې د معاش کچه',
-        fa: 'مطابق سکیل معاشاتی اداره',
+        fa: 'مطابق تشکیل معاشاتی اداره',
       },
     }),
     defineField({

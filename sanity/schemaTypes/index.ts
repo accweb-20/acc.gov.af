@@ -20,7 +20,7 @@ import localeString from './objects/localeString'
 import localeText from './objects/localeText'
 import localeList from './objects/localeList'
 import jobPosting from './jobPosting'
+import jobsPage from './jobsPage'
 
 
-
-export const schema = [slider, annualReport, policy, header, footer, product, home, aboutUs, contactUs, imports, exportPage, sales, photosPage, videosPage, tender, tendersPage, localeString, localeText, localeList, jobPosting];
+export const schema = [slider, annualReport, policy, header, footer, product, home, aboutUs, contactUs, imports, exportPage, sales, photosPage, videosPage, tender, tendersPage, localeString, localeText, localeList, jobPosting, jobsPage];

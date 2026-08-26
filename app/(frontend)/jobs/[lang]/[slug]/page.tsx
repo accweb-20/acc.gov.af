@@ -119,7 +119,7 @@ export default async function JobDetailPage({
 
   return (
     <main
-      className="jb-root min-h-screen px-4 py-10 sm:px-8"
+      className="jb-root min-h-screen px-4 py-10 sm:px-8 mt-10"
       dir={localeDir[locale]}
       data-lang={locale}
     >
