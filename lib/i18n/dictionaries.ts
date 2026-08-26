@@ -1,3 +1,4 @@
+// lib/i18n/dictionaries.ts
 import type { Locale } from './config'
 
 export interface Dictionary {
@@ -9,11 +10,23 @@ export interface Dictionary {
   hideExpired: string
   noJobsFound: string
   noJobsFoundDesc: string
-  activeCount: (n: number) => string
+
+  /*
+   * IMPORTANT:
+   * This is now plain serializable data instead of a function.
+   * This allows the entire Dictionary to be safely passed
+   * from Server Components to Client Components.
+   */
+  activeCount: {
+    singular: string
+    plural: string
+  }
+
   jobOverview: string
   relatedJobs: string
   postedOn: string
   apply: string
+
   fields: {
     location: string
     degree: string
@@ -39,11 +52,13 @@ export interface Dictionary {
     nationality: string
     travelRequired: string
   }
+
   status: {
     open: string
     closed: string
     expired: string
   }
+
   options: {
     gender: Record<string, string>
     announcementType: Record<string, string>
@@ -62,11 +77,17 @@ const en: Dictionary = {
   hideExpired: 'Hide expired jobs',
   noJobsFound: 'No jobs found',
   noJobsFoundDesc: 'Try adjusting your search or filters.',
-  activeCount: (n) => `${n} job${n === 1 ? '' : 's'} listed`,
+
+  activeCount: {
+    singular: 'job listed',
+    plural: 'jobs listed',
+  },
+
   jobOverview: 'Job Overview',
   relatedJobs: 'Similar Jobs',
   postedOn: 'Posted',
   apply: 'Apply Now',
+
   fields: {
     location: 'Location',
     degree: 'Degree',
@@ -92,10 +113,26 @@ const en: Dictionary = {
     nationality: 'Nationality',
     travelRequired: 'Travel Required',
   },
-  status: { open: 'Open', closed: 'Closed', expired: 'Expired' },
+
+  status: {
+    open: 'Open',
+    closed: 'Closed',
+    expired: 'Expired',
+  },
+
   options: {
-    gender: { male: 'Male', female: 'Female', any: 'Any' },
-    announcementType: { internal: 'Internal', external: 'External', both: 'Internal & External' },
+    gender: {
+      male: 'Male',
+      female: 'Female',
+      any: 'Any',
+    },
+
+    announcementType: {
+      internal: 'Internal',
+      external: 'External',
+      both: 'Internal & External',
+    },
+
     workType: {
       full_time: 'Full-time',
       part_time: 'Part-time',
@@ -103,6 +140,7 @@ const en: Dictionary = {
       internship: 'Internship',
       temporary: 'Temporary',
     },
+
     functionalArea: {
       it: 'Information Technology',
       finance: 'Finance',
@@ -116,7 +154,13 @@ const en: Dictionary = {
       agriculture: 'Agriculture',
       other: 'Other',
     },
-    languages: { dari: 'Dari', pashto: 'Pashto', english: 'English', other: 'Other' },
+
+    languages: {
+      dari: 'Dari',
+      pashto: 'Pashto',
+      english: 'English',
+      other: 'Other',
+    },
   },
 }
 
@@ -129,11 +173,17 @@ const fa: Dictionary = {
   hideExpired: 'پنهان کردن اعلانات ختم شده',
   noJobsFound: 'هیچ بستی یافت نشد',
   noJobsFoundDesc: 'معیارهای جستجو یا فیلترها را تغییر دهید.',
-  activeCount: (n) => `${n} بست نشر شده`,
+
+  activeCount: {
+    singular: 'بست نشر شده',
+    plural: 'بست نشر شده',
+  },
+
   jobOverview: 'معلومات بست',
   relatedJobs: 'بست‌های مشابه',
   postedOn: 'تاریخ نشر',
   apply: 'درخواست دادن',
+
   fields: {
     location: 'موقعیت',
     degree: 'سویه تحصیل',
@@ -159,10 +209,26 @@ const fa: Dictionary = {
     nationality: 'تابعیت',
     travelRequired: 'سفرهای کاری',
   },
-  status: { open: 'فعال', closed: 'بسته شده', expired: 'ختم شده' },
+
+  status: {
+    open: 'فعال',
+    closed: 'بسته شده',
+    expired: 'ختم شده',
+  },
+
   options: {
-    gender: { male: 'مرد', female: 'زن', any: 'هردو' },
-    announcementType: { internal: 'داخلی', external: 'خارجی', both: 'داخلی و خارجی' },
+    gender: {
+      male: 'مرد',
+      female: 'زن',
+      any: 'هردو',
+    },
+
+    announcementType: {
+      internal: 'داخلی',
+      external: 'خارجی',
+      both: 'داخلی و خارجی',
+    },
+
     workType: {
       full_time: 'وقت کامل',
       part_time: 'وقت جزئی',
@@ -170,6 +236,7 @@ const fa: Dictionary = {
       internship: 'کارآموزی',
       temporary: 'موقت',
     },
+
     functionalArea: {
       it: 'تکنالوژی معلوماتی',
       finance: 'مالی',
@@ -183,7 +250,13 @@ const fa: Dictionary = {
       agriculture: 'زراعت',
       other: 'سایر',
     },
-    languages: { dari: 'دری', pashto: 'پشتو', english: 'انگلیسی', other: 'سایر' },
+
+    languages: {
+      dari: 'دری',
+      pashto: 'پشتو',
+      english: 'انگلیسی',
+      other: 'سایر',
+    },
   },
 }
 
@@ -196,11 +269,17 @@ const ps: Dictionary = {
   hideExpired: 'پای ته رسېدلي اعلانونه پټ کړئ',
   noJobsFound: 'هیڅ دنده و نه موندل شوه',
   noJobsFoundDesc: 'خپل لټون یا فلټرونه بدل کړئ.',
-  activeCount: (n) => `${n} دندې خپرې شوې`,
+
+  activeCount: {
+    singular: 'دنده خپره شوې',
+    plural: 'دندې خپرې شوې',
+  },
+
   jobOverview: 'د دندې لنډيز',
   relatedJobs: 'ورته دندې',
   postedOn: 'خپور شوی',
   apply: 'غوښتنلیک ورکړئ',
+
   fields: {
     location: 'ځای',
     degree: 'زده کړه',
@@ -226,10 +305,26 @@ const ps: Dictionary = {
     nationality: 'تابعیت',
     travelRequired: 'کاري سفرونه',
   },
-  status: { open: 'فعال', closed: 'تړل شوی', expired: 'پای ته رسېدلی' },
+
+  status: {
+    open: 'فعال',
+    closed: 'تړل شوی',
+    expired: 'پای ته رسېدلی',
+  },
+
   options: {
-    gender: { male: 'نارینه', female: 'ښځینه', any: 'دواړه' },
-    announcementType: { internal: 'داخلي', external: 'بهرنی', both: 'داخلي او بهرنی' },
+    gender: {
+      male: 'نارینه',
+      female: 'ښځینه',
+      any: 'دواړه',
+    },
+
+    announcementType: {
+      internal: 'داخلي',
+      external: 'بهرنی',
+      both: 'داخلي او بهرنی',
+    },
+
     workType: {
       full_time: 'بشپړ وخت',
       part_time: 'نيم وخت',
@@ -237,6 +332,7 @@ const ps: Dictionary = {
       internship: 'انترنشپ',
       temporary: 'مؤقت',
     },
+
     functionalArea: {
       it: 'معلوماتي ټکنالوژي',
       finance: 'مالي',
@@ -250,12 +346,29 @@ const ps: Dictionary = {
       agriculture: 'کرنه',
       other: 'نور',
     },
-    languages: { dari: 'دري', pashto: 'پښتو', english: 'انګلیسي', other: 'نور' },
+
+    languages: {
+      dari: 'دري',
+      pashto: 'پښتو',
+      english: 'انګلیسي',
+      other: 'نور',
+    },
   },
 }
 
-const dictionaries: Record<Locale, Dictionary> = { en, fa, ps }
+const dictionaries: Record<Locale, Dictionary> = {
+  en,
+  fa,
+  ps,
+}
 
 export function getDictionary(locale: Locale): Dictionary {
   return dictionaries[locale]
+}
+
+export function formatActiveCount(
+  activeCount: Dictionary['activeCount'],
+  count: number
+): string {
+  return `${count} ${count === 1 ? activeCount.singular : activeCount.plural}`
 }

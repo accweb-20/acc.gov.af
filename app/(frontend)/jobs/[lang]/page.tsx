@@ -17,7 +17,10 @@ import {
   localeDir,
   type Locale,
 } from '@/lib/i18n/config'
-import { getDictionary } from '@/lib/i18n/dictionaries'
+import {
+  getDictionary,
+  formatActiveCount,
+} from '@/lib/i18n/dictionaries'
 import { JobCard } from '@/components/jobs/JobCard'
 import { JobFilters } from '@/components/jobs/JobFilters'
 import { LanguageSwitcher } from '@/components/jobs/LanguageSwitcher'
@@ -79,22 +82,9 @@ export default async function JobsPage({
     ),
   ])
 
-  /*
-   * `activeCount` is a function, so it must stay on the
-   * server and must NOT be passed to Client Components.
-   *
-   * Everything else in `clientDict` is serializable.
-   */
-  const {
-    activeCount,
-    ...clientDict
-  } = dict
-
-  const activeCountText = activeCount(jobs.length)
-
   return (
     <main
-      className="jb-root min-h-screen px-4 py-10 sm:px-8"
+      className="jb-root min-h-screen px-4 py-10 sm:px-8 mt-10"
       dir={localeDir[locale]}
       data-lang={locale}
     >
@@ -112,7 +102,7 @@ export default async function JobsPage({
               className="mt-1 text-sm"
               style={{ color: 'var(--jb-muted)' }}
             >
-              {activeCountText}
+              {formatActiveCount(dict.activeCount, jobs.length)}
             </p>
           </div>
 
@@ -122,7 +112,7 @@ export default async function JobsPage({
         <JobFilters
           functionalAreas={functionalAreas}
           workTypes={workTypes}
-          dict={clientDict}
+          dict={dict}
         />
 
         {jobs.length === 0 ? (
@@ -151,7 +141,7 @@ export default async function JobsPage({
                 key={job._id}
                 job={job}
                 locale={locale}
-                dict={clientDict}
+                dict={dict}
               />
             ))}
           </div>

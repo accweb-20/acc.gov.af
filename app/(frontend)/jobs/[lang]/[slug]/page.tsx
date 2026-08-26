@@ -73,21 +73,6 @@ export default async function JobDetailPage({
 
   const dict = getDictionary(locale)
 
-  /*
-   * `activeCount` is a function and therefore cannot cross
-   * the Server Component -> Client Component boundary.
-   *
-   * Remove it before passing the dictionary to child components.
-   */
-  const {
-    activeCount,
-    ...clientDict
-  } = dict
-
-  // Prevent an unused-variable warning while keeping the
-  // dictionary intentionally stripped of the function.
-  void activeCount
-
   const job = await client.fetch<JobPosting | null>(
     jobBySlugQuery,
     { slug }
@@ -144,7 +129,7 @@ export default async function JobDetailPage({
 
   return (
     <main
-      className="jb-root min-h-screen px-4 py-10 sm:px-8"
+      className="jb-root min-h-screen px-4 py-10 sm:px-8 mt-10"
       dir={localeDir[locale]}
       data-lang={locale}
     >
@@ -178,7 +163,6 @@ export default async function JobDetailPage({
           </div>
         )}
 
-        {/* Hero */}
         <header
           className="mb-8 rounded-xl border p-6 sm:p-8"
           style={{
@@ -190,7 +174,7 @@ export default async function JobDetailPage({
             <StatusBadge
               status={job.status}
               closingDate={job.closingDate}
-              dict={clientDict}
+              dict={dict}
             />
 
             {job.referenceNumber && (
@@ -294,7 +278,7 @@ export default async function JobDetailPage({
                       key={related._id}
                       job={related}
                       locale={locale}
-                      dict={clientDict}
+                      dict={dict}
                     />
                   ))}
                 </div>
@@ -305,7 +289,7 @@ export default async function JobDetailPage({
           <JobSidebarFacts
             job={job}
             locale={locale}
-            dict={clientDict}
+            dict={dict}
           />
         </div>
       </div>
