@@ -16,5 +16,11 @@ import photosPage from './photosPage';
 import videosPage from './videosPage';
 import tender from './tender';
 import tendersPage from './tendersPage';
+import localeString from './objects/localeString'
+import localeText from './objects/localeText'
+import localeList from './objects/localeList'
+import jobPosting from './jobPosting'
 
-export const schema = [slider, annualReport, policy, header, footer, product, home, aboutUs, contactUs, imports, exportPage, sales, photosPage, videosPage, tender, tendersPage];
+
+
+export const schema = [slider, annualReport, policy, header, footer, product, home, aboutUs, contactUs, imports, exportPage, sales, photosPage, videosPage, tender, tendersPage, localeString, localeText, localeList, jobPosting];

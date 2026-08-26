@@ -1,6 +1,6 @@
 // app/page.tsx
 import React from "react";
-import ScrollUp from "@/components/Common/ScrollUp";
+import ScrollToTop from "@/components/ScrollToTop";
 import Hero from "@/components/Hero";
 import Slider from "@/components/Slider";
 import ProductsGrid, { ProductGridItem } from "@/components/ProductsGrid";
@@ -274,7 +274,7 @@ export default async function Home() {
 
   return (
     <>
-      <ScrollUp />
+      <ScrollToTop />
 
       <Slider apiPath="/api/slider" />
 

@@ -1,0 +1,52 @@
+/* ──────────────────────────────────────────────────────────────────────
+   Job board theme
+   Import fonts in your root layout <head>:
+
+   <link rel="preconnect" href="https://fonts.googleapis.com" />
+   <link
+     href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Arabic:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap"
+     rel="stylesheet"
+   />
+   ────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --jb-primary: #02587b;
+  --jb-primary-dark: #013f59;
+  --jb-primary-light: #e6f0f4;
+  --jb-ink: #1c2733;
+  --jb-muted: #5b6b79;
+  --jb-border: #dfe6ea;
+  --jb-bg: #f7f9fa;
+  --jb-surface: #ffffff;
+  --jb-open: #1f8a4c;
+  --jb-open-bg: #eaf7ef;
+  --jb-expired: #97672a;
+  --jb-expired-bg: #fbf1e4;
+  --jb-closed: #6b7280;
+  --jb-closed-bg: #f1f2f4;
+
+  --jb-font-latin: 'Noto Sans', 'Segoe UI', sans-serif;
+  --jb-font-arabic: 'Noto Sans Arabic', 'Segoe UI', sans-serif;
+  --jb-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+.jb-root {
+  background-color: var(--jb-bg);
+  color: var(--jb-ink);
+}
+
+/* Font family switches with the active language, applied via data-lang
+   on the same element that carries dir="ltr|rtl". */
+.jb-root[data-lang='en'] {
+  font-family: var(--jb-font-latin);
+}
+.jb-root[data-lang='ps'],
+.jb-root[data-lang='fa'] {
+  font-family: var(--jb-font-arabic);
+}
+
+.jb-mono {
+  font-family: var(--jb-font-mono);
+  direction: ltr;
+  unicode-bidi: isolate;
+}
