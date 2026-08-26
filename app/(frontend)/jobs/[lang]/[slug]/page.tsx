@@ -5,7 +5,6 @@ import { notFound } from 'next/navigation'
 import { client } from '@/lib/sanity/client'
 import {
   jobBySlugQuery,
-  jobSlugsQuery,
   relatedJobsQuery,
 } from '@/lib/sanity/queries'
 
@@ -15,7 +14,6 @@ import type {
 } from '@/types/job'
 
 import {
-  locales,
   isLocale,
   defaultLocale,
   localeDir,
@@ -40,26 +38,18 @@ import { JobCard } from '@/components/jobs/JobCard'
 
 import '@/styles/jobs-theme.css'
 
-export const revalidate = 60
+/*
+ * Do not prerender individual job pages during Vercel build.
+ * Fetch Sanity data when the page is requested instead.
+ */
+export const dynamic = 'force-dynamic'
+export const dynamicParams = true
 
 interface JobDetailPageProps {
   params: Promise<{
     lang: string
     slug: string
   }>
-}
-
-export async function generateStaticParams() {
-  const slugs = await client.fetch<string[]>(
-    jobSlugsQuery
-  )
-
-  return locales.flatMap((lang) =>
-    slugs.map((slug) => ({
-      lang,
-      slug,
-    }))
-  )
 }
 
 export default async function JobDetailPage({
@@ -129,7 +119,7 @@ export default async function JobDetailPage({
 
   return (
     <main
-      className="jb-root min-h-screen px-4 py-10 sm:px-8 mt-10"
+      className="jb-root min-h-screen px-4 py-10 sm:px-8"
       dir={localeDir[locale]}
       data-lang={locale}
     >
@@ -163,6 +153,7 @@ export default async function JobDetailPage({
           </div>
         )}
 
+        {/* Hero */}
         <header
           className="mb-8 rounded-xl border p-6 sm:p-8"
           style={{
