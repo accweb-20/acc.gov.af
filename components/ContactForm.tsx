@@ -372,7 +372,7 @@ export default function ContactForm(): React.ReactElement {
         <aside className="text-sm">
           <div className="mb-6">
             <div className="font-bold text-base mb-1">Find US</div>
-            <div className="text-gray-700">Khawaja Rawash Sreet, Next to Kabul Customs Office, 9th Zoon, Kabul, Afghanistan</div>
+            <div className="text-gray-700">khwaja Rawash Street, 9th District, Kabul, Afghanistan</div>
           </div>
 
           <div className="mb-6">
@@ -386,7 +386,7 @@ export default function ContactForm(): React.ReactElement {
 
           <div className="mb-6">
             <div className="font-bold text-base mb-1">Call Us</div>
-            <div className="text-gray-700">020 292 5043 - 0093 74 5700 015</div>
+            <div className="text-gray-700">0202 109 420 - 0093 74 5700 015</div>
           </div>
 
           <div>
