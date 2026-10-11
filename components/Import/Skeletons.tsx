@@ -1,39 +1,70 @@
+
 // components/Import/Skeletons.tsx
+
 import React from "react";
 
+/**
+ * Page header skeleton
+ * Matches the updated PageHeader:
+ * - No hero image
+ * - No website navigation or logo
+ * - Breadcrumb / pagination trail
+ * - Large page title
+ * - Short supporting message
+ */
 export function ImportHeaderSkeleton() {
   return (
-    <header className="relative w-full" style={{ marginTop: 64 }}>
-      <div className="overflow-hidden mx-auto w-[90%] md:w-[93%] lg:w-[70%] max-w-[1440px]">
-        <div className="relative w-full h-[230px] md:h-[360px] lg:h-[320px] rounded-sm overflow-hidden bg-gray-200 animate-pulse" />
-      </div>
+    <header className="w-full">
+      <section className="flex min-h-[320px] w-full items-center justify-center bg-[#02587B] text-center md:min-h-[388px]">
+        <div className="mx-auto flex w-full max-w-[1252px] flex-col items-center  mt-14 md:mt-20 px-5 py-14 sm:px-8 md:py-16">
+          {/* Breadcrumb / pagination skeleton */}
 
-      <div
-        style={{ backgroundColor: "#02587B" }}
-        className="w-full mx-auto text-center flex flex-col justify-end px-4 min-h-[280px] md:min-h-[420px] lg:min-h-[420px] -mt-[120px] md:-mt-[240px] lg:-mt-[240px]"
-      >
-        <div className="my-6 mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[1440px] py-7 md:py-8">
-          <div className="text-[#F5F5F5]">
-            <div className="h-[48px] md:h-[80px] lg:h-[56px] w-3/4 mx-auto bg-white/20 rounded-sm animate-pulse" />
-            <div className="mt-4 h-4 w-1/2 mx-auto bg-white/10 rounded-sm animate-pulse" />
+          <div
+            className="flex items-center justify-center gap-2"
+            aria-hidden="true"
+          >
+            <div className="h-3 w-12 rounded-sm bg-white/30 animate-pulse sm:w-14" />
+
+            <div className="h-3 w-2 rounded-sm bg-white/20 animate-pulse" />
+
+            <div className="h-3 w-24 rounded-sm bg-white/30 animate-pulse sm:w-28" />
+          </div>
+
+          {/* Main page title skeleton */}
+
+          <div
+            className="mt-8 h-[46px] w-[75%] max-w-[500px] rounded-sm bg-white/20 animate-pulse sm:h-[52px] md:mt-7 md:h-[52px]"
+            aria-hidden="true"
+          />
+
+          {/* Short supporting message skeleton */}
+
+          <div
+            className="mt-8 flex w-full max-w-5xl flex-col items-center gap-3 md:mt-10"
+            aria-hidden="true"
+          >
+            <div className="h-4 w-[92%] rounded-sm bg-white/15 animate-pulse sm:h-5 sm:w-[78%]" />
+
+            <div className="h-4 w-[65%] rounded-sm bg-white/15 animate-pulse sm:h-5 sm:w-[48%]" />
           </div>
         </div>
-      </div>
+      </section>
     </header>
   );
 }
 
 export function ImportIntroSkeleton() {
   return (
-    <section className="w-full mx-auto mt-8">
-      <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[924px]">
+    <section className="mx-auto mt-8 w-full">
+      <div className="mx-auto w-[90%] max-w-[924px] md:w-[93%] lg:w-[90%]">
         <div className="mb-6">
-          <div className="h-8 w-1/3 bg-gray-200 rounded animate-pulse" />
+          <div className="h-8 w-1/3 animate-pulse rounded bg-gray-200" />
         </div>
+
         <div className="space-y-3">
-          <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
-          <div className="h-4 w-11/12 bg-gray-200 rounded animate-pulse" />
-          <div className="h-4 w-10/12 bg-gray-200 rounded animate-pulse" />
+          <div className="h-4 w-full animate-pulse rounded bg-gray-200" />
+          <div className="h-4 w-11/12 animate-pulse rounded bg-gray-200" />
+          <div className="h-4 w-10/12 animate-pulse rounded bg-gray-200" />
         </div>
       </div>
     </section>
@@ -42,8 +73,11 @@ export function ImportIntroSkeleton() {
 
 export function ImportCardSkeleton() {
   return (
-    <article className="flex justify-center w-full text-[#1A1A1A]">
-      <div className="group w-full max-w-[360px] relative flex flex-col items-start" style={{ maxWidth: 360 }}>
+    <article className="flex w-full justify-center text-[#1A1A1A]">
+      <div
+        className="group relative flex w-full max-w-[360px] flex-col items-start"
+        style={{ maxWidth: 360 }}
+      >
         <div
           className="relative z-20 mx-auto overflow-hidden"
           style={{
@@ -54,21 +88,28 @@ export function ImportCardSkeleton() {
             borderRadius: 0,
           }}
         >
-          <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+          <div className="absolute inset-0 animate-pulse bg-gray-200" />
         </div>
 
         <div
-          className="relative z-10 pt-6 w-full"
-          style={{ marginTop: -26, padding: "60px 18px 14px 18px", background: "#02587B" }}
+          className="relative z-10 w-full pt-6"
+          style={{
+            marginTop: -26,
+            padding: "60px 18px 14px 18px",
+            background: "#02587B",
+          }}
         >
           <div className="mb-4">
-            <div className="h-8 w-3/4 bg-white/20 rounded animate-pulse" />
-            <div className="mt-3 h-3 w-5/6 bg-white/10 rounded animate-pulse" />
+            <div className="h-8 w-3/4 animate-pulse rounded bg-white/20" />
+            <div className="mt-3 h-3 w-5/6 animate-pulse rounded bg-white/10" />
           </div>
 
-          <div className="w-full flex items-center justify-between" style={{ gap: 12 }}>
-            <div className="h-8 w-36 bg-yellow-400 rounded animate-pulse" />
-            <div className="h-4 w-16 bg-white/10 rounded animate-pulse" />
+          <div
+            className="flex w-full items-center justify-between"
+            style={{ gap: 12 }}
+          >
+            <div className="h-8 w-36 animate-pulse rounded bg-yellow-400" />
+            <div className="h-4 w-16 animate-pulse rounded bg-white/10" />
           </div>
         </div>
       </div>
@@ -77,17 +118,25 @@ export function ImportCardSkeleton() {
 }
 
 /**
- * Grid of card skeletons — adjust `count` as needed.
+ * Grid of import card skeletons.
  */
-export function ImportsGridSkeleton({ count = 6 }: { count?: number }) {
+export function ImportsGridSkeleton({
+  count = 6,
+}: {
+  count?: number;
+}) {
   const items = Array.from({ length: count });
+
   return (
-    <section id="imports" className="w-full mx-auto mt-6 text-[#1A1A1A] bg-white">
+    <section
+      id="imports"
+      className="mx-auto mt-6 w-full bg-white text-[#1A1A1A]"
+    >
       <div className="flex justify-center">
-        <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[1440px]">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-y-8 md:gap-x-6 lg:gap-x-8">
-            {items.map((_, i) => (
-              <div key={i}>
+        <div className="mx-auto w-[90%] max-w-[1440px] md:w-[93%] lg:w-[90%]">
+          <div className="grid grid-cols-1 gap-y-8 md:grid-cols-2 md:gap-x-6 lg:grid-cols-3 lg:gap-x-8">
+            {items.map((_, index) => (
+              <div key={index}>
                 <ImportCardSkeleton />
               </div>
             ))}
@@ -100,14 +149,15 @@ export function ImportsGridSkeleton({ count = 6 }: { count?: number }) {
 
 export function ImportBodySkeleton() {
   return (
-    <section className="w-full mx-auto py-12">
-      <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[1140px]">
+    <section className="mx-auto w-full py-12">
+      <div className="mx-auto w-[90%] max-w-[1140px] md:w-[93%] lg:w-[90%]">
         <div className="max-w-[920px]">
-          <div className="h-8 w-1/3 bg-gray-200 rounded animate-pulse mb-6" />
+          <div className="mb-6 h-8 w-1/3 animate-pulse rounded bg-gray-200" />
+
           <div className="space-y-3">
-            <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
-            <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
-            <div className="h-4 w-5/6 bg-gray-200 rounded animate-pulse" />
+            <div className="h-4 w-full animate-pulse rounded bg-gray-200" />
+            <div className="h-4 w-full animate-pulse rounded bg-gray-200" />
+            <div className="h-4 w-5/6 animate-pulse rounded bg-gray-200" />
           </div>
         </div>
       </div>

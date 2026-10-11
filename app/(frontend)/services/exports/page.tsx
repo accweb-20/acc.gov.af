@@ -9,13 +9,14 @@ import { Metadata } from "next";
 
 export const revalidate = 60;
 
+type BreadcrumbLink = { _key?: string; label?: string; href?: string };
 type ExportDoc = {
   title?: string;
   subtitle?: string;
   slug?: { current?: string };
-  desktopHero?: unknown;
-  mobileHero?: unknown;
-  heroImage?: unknown;
+  breadcrumbLinks?: BreadcrumbLink[];
+  breadcrumbLabel?: string;
+  headerMessage?: string;
   introTitle?: string;
   introMessage?: unknown[];
   introBackground?: { enabled?: boolean };
@@ -23,11 +24,7 @@ type ExportDoc = {
   bodyTitle?: string;
   bodyMessage?: unknown[];
   bodyBackground?: { enabled?: boolean };
-  seo?: {
-    seoTitle?: string;
-    metaDescription?: string;
-    keywords?: string[];
-  };
+  seo?: { seoTitle?: string; metaDescription?: string; keywords?: string[] };
 };
 
 type Child = { _key?: string; text?: string; marks?: string[]; [k: string]: any };
@@ -48,32 +45,22 @@ function renderChildren(children?: Child[], markDefs?: any[]) {
   return children.map((c, idx) => {
     const text = typeof c.text === "string" ? c.text : "";
     const marks = Array.isArray(c.marks) ? c.marks : [];
-
     if (marks.length === 0) return <React.Fragment key={c._key ?? idx}>{text}</React.Fragment>;
-
     return marks.reduce<React.ReactNode>((acc, mark) => {
       const def = Array.isArray(markDefs) ? markDefs.find((d) => d._key === mark) : null;
       if (def && (def.href || def.url)) {
         const href = def.href ?? def.url;
         const external = /^https?:\/\//.test(String(href));
         return (
-          <a
-            key={mark}
-            href={String(href)}
-            target={external ? "_blank" : undefined}
-            rel={external ? "noopener noreferrer" : undefined}
-            className="text-blue-600 underline"
-          >
+          <a key={mark} href={String(href)} target={external ? "_blank" : undefined} rel={external ? "noopener noreferrer" : undefined} className="text-blue-600 underline">
             {acc}
           </a>
         );
       }
-
       if (mark === "strong") return <strong key={mark} className="font-semibold">{acc}</strong>;
       if (mark === "em") return <em key={mark} className="italic">{acc}</em>;
       if (mark === "underline") return <u key={mark}>{acc}</u>;
       if (mark === "code") return <code key={mark} className="rounded px-1 py-[0.08rem] text-sm font-mono bg-gray-100">{acc}</code>;
-
       return <span key={mark}>{acc}</span>;
     }, text);
   });
@@ -81,43 +68,35 @@ function renderChildren(children?: Child[], markDefs?: any[]) {
 
 function PortableTextServer({ value }: { value?: Block[] | null }) {
   if (!Array.isArray(value) || value.length === 0) return null;
-
   const out: React.ReactNode[] = [];
-
   let i = 0;
   while (i < value.length) {
     const blk = value[i] as Block | undefined;
     if (!blk) { i++; continue; }
-
     if (blk._type === "block" && blk.listItem) {
       const listType = blk.listItem === "bullet" ? "ul" : "ol";
       const items: React.ReactNode[] = [];
-
       let j = i;
       while (j < value.length && (value[j] as Block)._type === "block" && (value[j] as Block).listItem === blk.listItem) {
         const b = value[j] as Block;
         items.push(<li key={b._key ?? j} className="mb-1">{renderChildren(b.children, b.markDefs)}</li>);
         j++;
       }
-
       out.push(<div key={`list-${i}`} className="my-3">{listType === "ul" ? <ul className="list-disc pl-6">{items}</ul> : <ol className="list-decimal pl-6">{items}</ol>}</div>);
       i = j;
       continue;
     }
-
     if (blk._type === "block") {
-      const style = (blk as any).style ?? "normal";
+      const style = blk.style ?? "normal";
       const children = renderChildren(blk.children, blk.markDefs);
       if (style === "h1") out.push(<h1 key={blk._key ?? i} className="text-3xl font-extrabold my-4">{children}</h1>);
       else if (style === "h2") out.push(<h2 key={blk._key ?? i} className="text-2xl font-bold my-3">{children}</h2>);
       else if (style === "h3") out.push(<h3 key={blk._key ?? i} className="text-xl font-semibold my-2">{children}</h3>);
       else if (style === "blockquote") out.push(<blockquote key={blk._key ?? i} className="border-l-4 pl-4 italic text-gray-700 my-4">{children}</blockquote>);
       else out.push(<p key={blk._key ?? i} className="my-2 leading-relaxed">{children}</p>);
-
       i++;
       continue;
     }
-
     if (blk._type === "image" || blk.asset || blk.url) {
       const url = (typeof getImageUrl === "function" ? getImageUrl(blk) : null) ?? blk.asset?.url ?? blk.url ?? null;
       const alt = blk.alt ?? "";
@@ -132,54 +111,37 @@ function PortableTextServer({ value }: { value?: Block[] | null }) {
       i++;
       continue;
     }
-
     i++;
   }
-
   return <>{out}</>;
 }
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const q = `*[_type == "export"][0]{title, subtitle, desktopHero, mobileHero, heroImage, seo}`;
+    const q = `*[_type == "export"][0]{title, subtitle, seo}`;
     const data = (await client.fetch(q)) as ExportDoc | null;
     if (!data) return { title: "Export" };
-
     const seoTitle = data.seo?.seoTitle ?? data.title ?? "Export";
     const description = data.seo?.metaDescription ?? data.subtitle ?? undefined;
-
-    const images: { url: string }[] = [];
-    const pickImage = data.desktopHero ?? data.mobileHero ?? data.heroImage ?? null;
-    if (pickImage) {
-      const url = (typeof getImageUrl === "function" ? getImageUrl(pickImage) : null) ?? null;
-      if (url) images.push({ url });
-    }
-
-    const metadata: Metadata = {
+    return {
       title: seoTitle,
       description,
-      openGraph: {
-        title: seoTitle,
-        description,
-        images: images.length > 0 ? images : undefined,
-      },
+      openGraph: { title: seoTitle, description },
+      keywords: Array.isArray(data.seo?.keywords) ? data.seo.keywords : undefined,
     };
-    return metadata;
-  } catch (err) {
+  } catch {
     return { title: "Export" };
   }
 }
 
 export default async function Page() {
   const q = `*[_type == "export"][0]{
-    title, subtitle, desktopHero, mobileHero, heroImage, introTitle, introMessage, introBackground, bodyTitle, bodyMessage, bodyBackground,
+    title, subtitle, breadcrumbLinks[]{_key, label, href}, breadcrumbLabel, headerMessage,
+    introTitle, introMessage, introBackground, bodyTitle, bodyMessage, bodyBackground,
     exports[]{ _key, title, description, image, order, "slug": slug.current }
   }`;
-
   const data = (await client.fetch(q)) as ExportDoc | null;
-
   if (!data) return <div className="p-8">Export page not found.</div>;
-
   const exportsRaw: Record<string, unknown>[] = Array.isArray(data.exports) ? data.exports : [];
 
   return (
@@ -187,22 +149,17 @@ export default async function Page() {
       <PageHeader
         title={data.title}
         subtitle={data.subtitle}
-        desktopHero={data.desktopHero}
-        mobileHero={data.mobileHero}
+        breadcrumbLinks={data.breadcrumbLinks}
+        breadcrumbLabel={data.breadcrumbLabel}
+        headerMessage={data.headerMessage}
       />
-
       <ExportIntro
         introTitle={data.introTitle}
         introMessage={(data.introMessage as unknown[]) ?? []}
         introBackgroundEnabled={!!data.introBackground?.enabled}
       />
-
       <ExportsGrid exportsArr={exportsRaw} />
-
-      <section
-        className={`w-full mx-auto`}
-        style={{ background: !!data.bodyBackground?.enabled ? "linear-gradient(180deg,#f5f0ff,#f1e8ff)" : "transparent" }}
-      >
+      <section className="w-full mx-auto" style={{ background: !!data.bodyBackground?.enabled ? "linear-gradient(180deg,#f5f0ff,#f1e8ff)" : "transparent" }}>
         <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] py-12">
           <div className="max-w-[920px]">
             {data.bodyTitle && <h2 className="text-[45px] md:text-[60px] font-extrabold mb-6">{data.bodyTitle}</h2>}

@@ -8,11 +8,13 @@ import { Metadata } from "next";
 
 export const revalidate = 60;
 
+type BreadcrumbLink = { _key?: string; label?: string; href?: string };
 type VideoDoc = {
   title?: string;
   subtitle?: string;
-  desktopHero?: string | null;
-  mobileHero?: string | null;
+  breadcrumbLinks?: BreadcrumbLink[];
+  breadcrumbLabel?: string;
+  headerMessage?: string;
   introTitle?: string;
   introMessage?: unknown[];
   introBackground?: { enabled?: boolean };
@@ -25,20 +27,17 @@ type VideoDoc = {
 
 export async function generateMetadata(): Promise<Metadata> {
   try {
-    const q = `*[_type == "videosPage"][0]{title, seo, "desktopHero": desktopHero.asset->url, "mobileHero": mobileHero.asset->url}`;
+    const q = `*[_type == "videosPage"][0]{title, seo}`;
     const doc = (await client.fetch(q)) as VideoDoc | null;
     if (!doc) return { title: "Videos" };
     const seoTitle = doc.seo?.seoTitle ?? doc.title ?? "Videos";
     const description = doc.seo?.metaDescription ?? undefined;
-    const images = [];
-    if (doc.desktopHero) images.push({ url: doc.desktopHero });
-    else if (doc.mobileHero) images.push({ url: doc.mobileHero });
     return {
       title: seoTitle,
       description,
-      openGraph: { title: seoTitle, description, images: images.length ? images : undefined },
-      keywords: Array.isArray(doc.seo?.keywords) ? doc.seo?.keywords : undefined,
-    } as Metadata;
+      openGraph: { title: seoTitle, description },
+      keywords: Array.isArray(doc.seo?.keywords) ? doc.seo.keywords : undefined,
+    };
   } catch {
     return { title: "Videos" };
   }
@@ -46,13 +45,10 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Page() {
   const q = `*[_type == "videosPage"][0]{
-    title, subtitle,
-    "desktopHero": desktopHero.asset->url,
-    "mobileHero": mobileHero.asset->url,
+    title, subtitle, breadcrumbLinks[]{_key, label, href}, breadcrumbLabel, headerMessage,
     introTitle, introMessage, introBackground, bodyTitle, bodyMessage, bodyBackground,
     videos[]{ _key, title, "video": video.asset->url, "poster": poster.asset->url, order, "slug": slug.current }
   }`;
-
   const data = (await client.fetch(q)) as VideoDoc | null;
   if (!data) return <div className="p-8">Videos page not found.</div>;
   const videosRaw: Record<string, unknown>[] = Array.isArray(data.videos) ? data.videos : [];
@@ -62,18 +58,16 @@ export default async function Page() {
       <PageHeader
         title={data.title}
         subtitle={data.subtitle}
-        desktopHero={data.desktopHero}
-        mobileHero={data.mobileHero}
+        breadcrumbLinks={data.breadcrumbLinks}
+        breadcrumbLabel={data.breadcrumbLabel}
+        headerMessage={data.headerMessage}
       />
-
       <VideosIntro
         introTitle={data.introTitle}
         introMessage={(data.introMessage as unknown[]) ?? []}
         introBackgroundEnabled={!!data.introBackground?.enabled}
       />
-
       <VideosGrid videosArr={videosRaw} />
-
       <section
         className="w-full mx-auto"
         style={{ background: !!data.bodyBackground?.enabled ? "linear-gradient(180deg,#f5f0ff,#f1e8ff)" : "transparent" }}

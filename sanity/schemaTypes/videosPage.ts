@@ -1,91 +1,44 @@
 // sanity/schemaTypes/videosPage.ts
-export default {
-  name: "videosPage",
-  title: "Videos Page",
-  type: "document",
+import { defineType, defineField, defineArrayMember } from "sanity";
+
+const breadcrumbLink = defineArrayMember({
+  name: "breadcrumbLink", title: "Breadcrumb Link", type: "object",
   fields: [
-    { name: "title", title: "Title", type: "string" },
-    { name: "slug", title: "Slug", type: "slug", options: { source: "title" } },
-    { name: "subtitle", title: "Subtitle", type: "string" },
+    defineField({ name: "label", title: "Label", type: "string", validation: (Rule) => Rule.required() }),
+    defineField({ name: "href", title: "Internal Path", type: "string", validation: (Rule) => Rule.required().custom((value) => typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? true : "Enter an internal path beginning with / (not //).") }),
+  ], preview: { select: { title: "label", subtitle: "href" } },
+});
 
-    // hero images
-    {
-      name: "desktopHero",
-      title: "Desktop Hero Image",
-      type: "image",
-      options: { hotspot: true },
-      fields: [{ name: "alt", title: "Alt text", type: "string" }],
-    },
-    {
-      name: "mobileHero",
-      title: "Mobile Hero Image",
-      type: "image",
-      options: { hotspot: true },
-      fields: [{ name: "alt", title: "Alt text", type: "string" }],
-    },
-
-    // intro
-    { name: "introTitle", title: "Intro Title", type: "string" },
-    { name: "introMessage", title: "Intro Message", type: "array", of: [{ type: "block" }, { type: "image" }] },
-    {
-      name: "introBackground",
-      title: "Intro Background",
-      type: "object",
-      fields: [{ name: "enabled", title: "Enabled", type: "boolean", initialValue: false }],
-    },
-
-    // videos array (video stored as file asset)
-    {
-      name: "videos",
-      title: "Videos",
-      type: "array",
-      of: [
-        {
-          type: "object",
-          name: "videoItem",
-          title: "Video Item",
-          fields: [
-            { name: "title", title: "Title", type: "string" },
-            {
-              name: "video",
-              title: "Video File",
-              type: "file",
-              options: { accept: "video/*" },
-            },
-            { name: "poster", title: "Poster Image (optional)", type: "image", options: { hotspot: true }, fields: [{ name: "alt", title: "Alt text", type: "string" }] },
-            { name: "order", title: "Order", type: "number" },
-            { name: "slug", title: "Slug", type: "slug", options: { source: "title", maxLength: 96 } },
-          ],
-        },
-      ],
-    },
-
-    // body
-    { name: "bodyTitle", title: "Body Title", type: "string" },
-    { name: "bodyMessage", title: "Body Message", type: "array", of: [{ type: "block" }, { type: "image" }] },
-    {
-      name: "bodyBackground",
-      title: "Body Background",
-      type: "object",
-      fields: [{ name: "enabled", title: "Enabled", type: "boolean", initialValue: false }],
-    },
-
-    // SEO
-    {
-      name: "seo",
-      title: "SEO",
-      type: "object",
-      fields: [
-        { name: "seoTitle", title: "SEO Title", type: "string" },
-        { name: "metaDescription", title: "Meta Description", type: "text" },
-        { name: "keywords", title: "Keywords", type: "array", of: [{ type: "string" }] },
-      ],
-    },
+export default defineType({
+  name: "videosPage", title: "Videos Page", type: "document",
+  fields: [
+    defineField({ name: "title", title: "Title", type: "string", validation: (Rule) => Rule.required() }),
+    defineField({ name: "slug", title: "Slug", type: "slug", options: { source: "title" }, validation: (Rule) => Rule.required() }),
+    defineField({ name: "subtitle", title: "Subtitle (fallback header message)", type: "string" }),
+    defineField({ name: "breadcrumbLinks", title: "Breadcrumb Links", type: "array", of: [breadcrumbLink] }),
+    defineField({ name: "breadcrumbLabel", title: "Current Breadcrumb Label", type: "string", description: "Defaults to the page title." }),
+    defineField({ name: "headerMessage", title: "Header Supporting Message", type: "text", rows: 3 }),
+    defineField({ name: "introTitle", title: "Intro Title", type: "string" }),
+    defineField({ name: "introMessage", title: "Intro Message", type: "array", of: [defineArrayMember({ type: "block" }), defineArrayMember({ type: "image" })] }),
+    defineField({ name: "introBackground", title: "Intro Background", type: "object", fields: [defineField({ name: "enabled", title: "Enabled", type: "boolean", initialValue: false })] }),
+    defineField({
+      name: "videos", title: "Videos", type: "array",
+      of: [defineArrayMember({ name: "videoItem", title: "Video Item", type: "object", fields: [
+        defineField({ name: "title", title: "Title", type: "string" }),
+        defineField({ name: "video", title: "Video File", type: "file", options: { accept: "video/*" } }),
+        defineField({ name: "poster", title: "Poster Image (optional)", type: "image", options: { hotspot: true }, fields: [defineField({ name: "alt", title: "Alt text", type: "string" })] }),
+        defineField({ name: "order", title: "Order", type: "number" }),
+        defineField({ name: "slug", title: "Slug", type: "slug", options: { source: "title", maxLength: 96 } }),
+      ], preview: { select: { title: "title", media: "poster" } } })],
+    }),
+    defineField({ name: "bodyTitle", title: "Body Title", type: "string" }),
+    defineField({ name: "bodyMessage", title: "Body Message", type: "array", of: [defineArrayMember({ type: "block" }), defineArrayMember({ type: "image" })] }),
+    defineField({ name: "bodyBackground", title: "Body Background", type: "object", fields: [defineField({ name: "enabled", title: "Enabled", type: "boolean", initialValue: false })] }),
+    defineField({ name: "seo", title: "SEO", type: "object", fields: [
+      defineField({ name: "seoTitle", title: "SEO Title", type: "string" }),
+      defineField({ name: "metaDescription", title: "Meta Description", type: "text", rows: 3 }),
+      defineField({ name: "keywords", title: "Keywords", type: "array", of: [defineArrayMember({ type: "string" })] }),
+    ] }),
   ],
-  preview: {
-    select: {
-      title: "title",
-      media: "desktopHero",
-    },
-  },
-};
+  preview: { select: { title: "title" } },
+});

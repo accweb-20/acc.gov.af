@@ -3,18 +3,41 @@ import React from "react";
 
 export function PhotosHeaderSkeleton() {
   return (
-    <header className="relative w-full" style={{ marginTop: 64 }}>
-      <div className="overflow-hidden mx-auto w-[90%] md:w-[93%] lg:w-[70%] max-w-[1440px]">
-        <div className="relative w-full h-[230px] md:h-[360px] lg:h-[320px] rounded-sm overflow-hidden bg-gray-200 animate-pulse" />
-      </div>
-      <div style={{ backgroundColor: "#02587B" }} className="w-full mx-auto text-center flex flex-col justify-end px-4 min-h-[280px] -mt-[120px] md:-mt-[240px]">
-        <div className="my-6 mx-auto w-[90%] max-w-[1440px] py-7 md:py-8">
-          <div className="text-[#F5F5F5]">
-            <div className="h-12 w-3/4 mx-auto bg-white/20 rounded-sm animate-pulse" />
-            <div className="mt-4 h-4 w-1/2 mx-auto bg-white/10 rounded-sm animate-pulse" />
+    <header className="w-full">
+      <section className="flex min-h-[320px] w-full items-center justify-center bg-[#02587B] text-center md:min-h-[388px]">
+        <div className="mx-auto flex w-full max-w-[1252px] flex-col items-center  mt-14 md:mt-20 px-5 py-14 sm:px-8 md:py-16">
+          {/* Breadcrumb / pagination skeleton */}
+
+          <div
+            className="flex items-center justify-center gap-2"
+            aria-hidden="true"
+          >
+            <div className="h-3 w-12 rounded-sm bg-white/30 animate-pulse sm:w-14" />
+
+            <div className="h-3 w-2 rounded-sm bg-white/20 animate-pulse" />
+
+            <div className="h-3 w-24 rounded-sm bg-white/30 animate-pulse sm:w-28" />
+          </div>
+
+          {/* Main page title skeleton */}
+
+          <div
+            className="mt-8 h-[46px] w-[75%] max-w-[500px] rounded-sm bg-white/20 animate-pulse sm:h-[52px] md:mt-7 md:h-[52px]"
+            aria-hidden="true"
+          />
+
+          {/* Short supporting message skeleton */}
+
+          <div
+            className="mt-8 flex w-full max-w-5xl flex-col items-center gap-3 md:mt-10"
+            aria-hidden="true"
+          >
+            <div className="h-4 w-[92%] rounded-sm bg-white/15 animate-pulse sm:h-5 sm:w-[78%]" />
+
+            <div className="h-4 w-[65%] rounded-sm bg-white/15 animate-pulse sm:h-5 sm:w-[48%]" />
           </div>
         </div>
-      </div>
+      </section>
     </header>
   );
 }
