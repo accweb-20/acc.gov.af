@@ -7,6 +7,11 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { sanityClient, getSanityImageUrl } from "../../sanity/lib/client";
 
+/* Theme colors */
+const BG = "#02587b";
+const FG = "#ffffff";
+const HOVER_BG = "rgba(255,255,255,0.15)";
+
 type SanityLink = {
   linkType?: "internal" | "external";
   internalRef?: { _id?: string; _type?: string; title?: string; slug?: string } | null;
@@ -166,7 +171,7 @@ export default function Header(): JSX.Element {
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 w-full bg-white shadow-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 w-full shadow-sm" style={{ background: BG, color: FG }}>
         <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px]">
           <div className="flex h-16 items-center justify-between">
             {/* Logo + mobile language area */}
@@ -182,10 +187,10 @@ export default function Header(): JSX.Element {
                       unoptimized
                     />
                   ) : (
-                    <span style={{ color: "#02587b", fontWeight: 700 }}>{data?.title ?? "Site"}</span>
+                    <span style={{ color: FG, fontWeight: 700 }}>{data?.title ?? "Site"}</span>
                   )
                 ) : (
-                  <div className="h-14 w-12.5 animate-pulse rounded bg-gray-200 mt-0.5" />
+                  <div className="h-14 w-12.5 animate-pulse rounded bg-white/20 mt-0.5" />
                 )}
               </Link>
 
@@ -198,7 +203,7 @@ export default function Header(): JSX.Element {
                     aria-haspopup="listbox"
                     aria-expanded={langOpen}
                     className="flex items-center rounded border px-2 py-1 text-sm"
-                    style={{ borderColor: "#e5e7eb", color: "#02587b" }}
+                    style={{ borderColor: "rgba(255,255,255,0.4)", color: FG }}
                   >
                     {LANGS.find((l) => l.value === lang)?.label ?? "Language"}
                     <span className="ml-2" aria-hidden>
@@ -217,8 +222,8 @@ export default function Header(): JSX.Element {
                     <ul
                       role="listbox"
                       tabIndex={-1}
-                      className="absolute left-0 z-50 mt-1 w-36 overflow-hidden rounded bg-white shadow-lg"
-                      style={{ border: "1px solid #e5e7eb" }}
+                      className="absolute left-0 z-50 mt-1 w-36 overflow-hidden rounded shadow-lg"
+                      style={{ background: BG, border: "1px solid rgba(255,255,255,0.2)" }}
                     >
                       {LANGS.map((l) => (
                         <li
@@ -230,14 +235,12 @@ export default function Header(): JSX.Element {
                           }}
                           onKeyDown={(e) => e.key === "Enter" && (setLang(l.value), setLangOpen(false))}
                           className="cursor-pointer px-3 py-2 text-sm"
-                          style={{ color: "#02587b" }}
+                          style={{ color: FG }}
                           onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = "#02587B";
-                            (e.currentTarget as HTMLElement).style.color = "#F5F5F5";
+                            (e.currentTarget as HTMLElement).style.background = HOVER_BG;
                           }}
                           onMouseLeave={(e) => {
                             (e.currentTarget as HTMLElement).style.background = "";
-                            (e.currentTarget as HTMLElement).style.color = "#02587b";
                           }}
                         >
                           {l.label}
@@ -266,10 +269,8 @@ export default function Header(): JSX.Element {
                               aria-expanded={openIndex === i}
                               style={{ background: "transparent" }}
                             >
-                              <span className="nav-link inline-block" style={{ color: "#02587b" }}>
-                                {item.title}
-                              </span>
-                              <span className="text-[#02587B]">
+                              <span className="nav-link inline-block">{item.title}</span>
+                              <span>
                                 <svg width="25" height="24" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
                                   <path
                                     fillRule="evenodd"
@@ -282,14 +283,19 @@ export default function Header(): JSX.Element {
                             </button>
 
                             <div
-                              className="absolute left-0 w-56 bg-white opacity-0 invisible shadow-lg transition-all group-hover:visible group-hover:opacity-100"
+                              className="absolute left-0 w-56 opacity-0 invisible shadow-lg transition-all group-hover:visible group-hover:opacity-100"
                               style={{
+                                background: BG,
                                 boxShadow:
                                   "0 6px 6px -4px rgba(0,0,0,0.25), 4px 0 6px -4px rgba(0,0,0,0.25), -4px 0 6px -4px rgba(0,0,0,0.25)",
                               }}
                             >
                               <div className="px-4">
-                                {item.submenu?.introText && <div className="mb-2 text-sm">{item.submenu.introText}</div>}
+                                {item.submenu?.introText && (
+                                  <div className="mb-2 text-sm" style={{ color: FG }}>
+                                    {item.submenu.introText}
+                                  </div>
+                                )}
                                 <ul>
                                   {item.submenu?.items?.map((si, k) => {
                                     const s = resolveLink(si.link);
@@ -301,7 +307,6 @@ export default function Header(): JSX.Element {
                                             target={s.target}
                                             rel="noopener noreferrer"
                                             className="inline-block py-2 text-sm"
-                                            style={{ color: "#02587b" }}
                                           >
                                             {si.label}
                                           </a>
@@ -309,9 +314,9 @@ export default function Header(): JSX.Element {
                                           <Link
                                             href={s.href}
                                             className={
-                                              "relative inline-block py-2 text-sm text-[#02587b] " +
+                                              "relative inline-block py-2 text-sm " +
                                               "after:absolute after:bottom-2 after:left-0 after:right-0 " +
-                                              "after:h-[2px] after:origin-center after:scale-x-0 after:transform after:bg-[#02587b] " +
+                                              "after:h-[2px] after:origin-center after:scale-x-0 after:transform after:bg-white " +
                                               "after:transition-transform after:duration-300 after:content-[''] after:pointer-events-none " +
                                               "hover:after:scale-x-100"
                                             }
@@ -333,15 +338,11 @@ export default function Header(): JSX.Element {
                             rel="noopener noreferrer"
                             className="flex h-full items-center px-1 text-base font-medium"
                           >
-                            <span className="nav-link inline-block" style={{ color: "#02587b" }}>
-                              {item.title}
-                            </span>
+                            <span className="nav-link inline-block">{item.title}</span>
                           </a>
                         ) : (
                           <Link href={ln.href} className="flex h-full items-center px-1 text-base font-medium">
-                            <span className="nav-link inline-block" style={{ color: "#02587b" }}>
-                              {item.title}
-                            </span>
+                            <span className="nav-link inline-block">{item.title}</span>
                           </Link>
                         )}
                       </li>
@@ -350,11 +351,11 @@ export default function Header(): JSX.Element {
                 </ul>
               ) : (
                 <div className="mt-6 flex items-center gap-4">
-                  <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-                  <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-                  <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-                  <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
-                  <div className="h-4 w-24 animate-pulse rounded bg-gray-200" />
+                  <div className="h-4 w-24 animate-pulse rounded bg-white/20" />
+                  <div className="h-4 w-24 animate-pulse rounded bg-white/20" />
+                  <div className="h-4 w-24 animate-pulse rounded bg-white/20" />
+                  <div className="h-4 w-24 animate-pulse rounded bg-white/20" />
+                  <div className="h-4 w-24 animate-pulse rounded bg-white/20" />
                 </div>
               )}
             </nav>
@@ -369,7 +370,7 @@ export default function Header(): JSX.Element {
                     aria-haspopup="listbox"
                     aria-expanded={langOpen}
                     className="flex items-center rounded border px-2 py-1 text-sm"
-                    style={{ borderColor: "#e5e7eb", color: "#02587b" }}
+                    style={{ borderColor: "rgba(255,255,255,0.4)", color: FG }}
                   >
                     {LANGS.find((l) => l.value === lang)?.label ?? "Language"}
                     <span className="ml-2" aria-hidden>
@@ -388,8 +389,8 @@ export default function Header(): JSX.Element {
                     <ul
                       role="listbox"
                       tabIndex={-1}
-                      className="absolute right-0 z-50 mt-1 w-36 overflow-hidden rounded bg-white shadow-lg"
-                      style={{ border: "1px solid #e5e7eb" }}
+                      className="absolute right-0 z-50 mt-1 w-36 overflow-hidden rounded shadow-lg"
+                      style={{ background: BG, border: "1px solid rgba(255,255,255,0.2)" }}
                     >
                       {LANGS.map((l) => (
                         <li
@@ -401,14 +402,12 @@ export default function Header(): JSX.Element {
                           }}
                           onKeyDown={(e) => e.key === "Enter" && (setLang(l.value), setLangOpen(false))}
                           className="cursor-pointer px-3 py-2 text-sm"
-                          style={{ color: "#02587b" }}
+                          style={{ color: FG }}
                           onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = "#02587B";
-                            (e.currentTarget as HTMLElement).style.color = "#F5F5F5";
+                            (e.currentTarget as HTMLElement).style.background = HOVER_BG;
                           }}
                           onMouseLeave={(e) => {
                             (e.currentTarget as HTMLElement).style.background = "";
-                            (e.currentTarget as HTMLElement).style.color = "#02587b";
                           }}
                         >
                           {l.label}
@@ -429,19 +428,19 @@ export default function Header(): JSX.Element {
                     className={`absolute left-0 top-0 block h-[2px] w-full transition-transform ${
                       navbarOpen ? "translate-y-[10px] rotate-45" : ""
                     }`}
-                    style={{ background: "#02587b" }}
+                    style={{ background: FG }}
                   />
                   <span
                     className={`absolute left-0 top-[8px] block h-[2px] w-full transition-opacity ${
                       navbarOpen ? "opacity-0" : ""
                     }`}
-                    style={{ background: "#02587b" }}
+                    style={{ background: FG }}
                   />
                   <span
                     className={`absolute left-0 top-[16px] block h-[2px] w-full transition-transform ${
                       navbarOpen ? "-translate-y-[10px] -rotate-45" : ""
                     }`}
-                    style={{ background: "#02587b" }}
+                    style={{ background: FG }}
                   />
                 </span>
               </button>
@@ -457,8 +456,7 @@ export default function Header(): JSX.Element {
           navbarOpen ? "translate-y-0" : "-translate-y-[calc(100vh-4rem)]"
         }`}
       >
-        <div className="min-h-[calc(100vh-4rem)] w-full overflow-auto bg-white px-4 py-4">
-          
+        <div className="min-h-[calc(100vh-4rem)] w-full overflow-auto px-4 py-4" style={{ background: BG, color: FG }}>
           <nav>
             {data ? (
               <ul className="flex flex-col">
@@ -467,24 +465,18 @@ export default function Header(): JSX.Element {
                   const isOpen = openIndex === i;
 
                   return (
-                    <li key={i} className="border-b border-gray-100">
+                    <li key={i} className="border-b border-white/20">
                       <div className="flex items-center justify-between py-4">
                         {item.showSubmenu ? (
-                          <button onClick={() => toggleSub(i)} className="flex-1 text-left" style={{ color: "#02587b" }}>
+                          <button onClick={() => toggleSub(i)} className="flex-1 text-left">
                             {item.title}
                           </button>
                         ) : ln.external ? (
-                          <a
-                            href={ln.href}
-                            target={ln.target}
-                            rel="noopener noreferrer"
-                            className="flex-1"
-                            style={{ color: "#02587b" }}
-                          >
+                          <a href={ln.href} target={ln.target} rel="noopener noreferrer" className="flex-1">
                             {item.title}
                           </a>
                         ) : (
-                          <Link href={ln.href} className="flex-1" style={{ color: "#02587b" }}>
+                          <Link href={ln.href} className="flex-1">
                             {item.title}
                           </Link>
                         )}
@@ -494,7 +486,6 @@ export default function Header(): JSX.Element {
                             onClick={() => toggleSub(i)}
                             aria-label="Toggle"
                             className={`p-2 transition-transform ${isOpen ? "rotate-180" : ""}`}
-                            style={{ color: "#02587b" }}
                           >
                             <svg width="20" height="20" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
                               <path
@@ -524,12 +515,12 @@ export default function Header(): JSX.Element {
                                         target={s.target}
                                         rel="noopener noreferrer"
                                         className="block"
-                                        style={{ color: "#02587b", paddingLeft: 8 }}
+                                        style={{ paddingLeft: 8 }}
                                       >
                                         {si.label}
                                       </a>
                                     ) : (
-                                      <Link href={s.href} className="block" style={{ color: "#02587b", paddingLeft: 8 }}>
+                                      <Link href={s.href} className="block" style={{ paddingLeft: 8 }}>
                                         {si.label}
                                       </Link>
                                     )}
@@ -546,11 +537,11 @@ export default function Header(): JSX.Element {
               </ul>
             ) : (
               <div className="space-y-3">
-                <div className="h-4 w-3/4 animate-pulse rounded bg-gray-200" />
-                <div className="h-4 w-1/2 animate-pulse rounded bg-gray-200" />
-                <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
-                <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
-                <div className="h-4 w-2/3 animate-pulse rounded bg-gray-200" />
+                <div className="h-4 w-3/4 animate-pulse rounded bg-white/20" />
+                <div className="h-4 w-1/2 animate-pulse rounded bg-white/20" />
+                <div className="h-4 w-2/3 animate-pulse rounded bg-white/20" />
+                <div className="h-4 w-2/3 animate-pulse rounded bg-white/20" />
+                <div className="h-4 w-2/3 animate-pulse rounded bg-white/20" />
               </div>
             )}
           </nav>
@@ -560,12 +551,12 @@ export default function Header(): JSX.Element {
       <style jsx>{`
         a,
         button {
-          color: #02587b;
+          color: #ffffff; 
         }
 
         a:hover,
         button:hover {
-          color: #f4ba00;
+          color: #ffffff;
         }
 
         .nav-link {
@@ -580,7 +571,7 @@ export default function Header(): JSX.Element {
           right: 0;
           bottom: -4px;
           height: 4px;
-          background: #02587b;
+          background: #ffffff;
           border-radius: 0 !important;
           transform-origin: center;
           transform: scaleX(0);
