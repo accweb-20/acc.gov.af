@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname, useSearchParams } from 'next/navigation'
+import { Languages } from 'lucide-react'
 import { locales, type Locale, localeLabel } from '@/lib/i18n/config'
 
 export function LanguageSwitcher({ current }: { current: Locale }) {
@@ -9,7 +10,8 @@ export function LanguageSwitcher({ current }: { current: Locale }) {
   const searchParams = useSearchParams()
 
   return (
-    <div className="flex items-center gap-1 rounded-full border p-1" style={{ borderColor: 'var(--jb-border)' }}>
+    <div className="flex items-center gap-1 border border-brand-line/15 bg-paper p-1">
+      <Languages size={16} className="mx-1.5 text-brand-fg" aria-hidden />
       {locales.map((locale) => {
         const segments = pathname.split('/').filter(Boolean)
         segments[segments.indexOf(current) >= 0 ? segments.indexOf(current) : 1] = locale
@@ -22,12 +24,8 @@ export function LanguageSwitcher({ current }: { current: Locale }) {
           <Link
             key={locale}
             href={href}
-            className="px-3 py-1 rounded-full text-xs font-semibold transition-colors"
-            style={
-              isActive
-                ? { backgroundColor: 'var(--jb-primary)', color: '#fff' }
-                : { color: 'var(--jb-muted)' }
-            }
+            aria-current={isActive ? 'true' : undefined}
+            className={`px-3 py-1.5 text-[13px] font-semibold transition-colors ${isActive ? 'bg-brand text-white' : 'text-ink/65 hover:text-brand-fg'}`}
           >
             {localeLabel[locale]}
           </Link>

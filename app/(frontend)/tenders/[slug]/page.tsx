@@ -9,6 +9,7 @@ import { notFound } from "next/navigation";
 
 import DownloadButton from "@/components/DownloadButton";
 import PageHeader from "@/components/PageHeader";
+import RichText from "@/components/Import/RichText";
 
 import { sanityClient } from "@/sanity/lib/client";
 
@@ -72,97 +73,13 @@ type TenderDoc = {
 
   description?: Block[];
 
-};
-
-const renderSpan = (child: Span, markDefs?: MarkDef[], keyBase = "") => {
-
-  const text = typeof child?.text === "string" ? child.text : "";
-
-  const marks = Array.isArray(child?.marks) ? child.marks : [];
-
-  let node: React.ReactNode = text;
-
-  for (const mark of marks) {
-
-    if (mark === "strong") node = <strong key={`${keyBase}-strong`}>{node}</strong>;
-
-    else if (mark === "em") node = <em key={`${keyBase}-em`}>{node}</em>;
-
-    else {
-
-      const md = Array.isArray(markDefs) ? markDefs.find((d) => d._key === mark) : undefined;
-
-      if (md && (md.href || md.url)) {
-
-        const href = (md.href ?? md.url) as string;
-
-        node = (
-
-          <a key={`${keyBase}-a`} href={href} target="_blank" rel="noopener noreferrer" className="underline">
-
-            {node}
-
-          </a>
-
-        );
-
-      } else {
-
-        node = <span key={`${keyBase}-span`}>{node}</span>;
-
-      }
-
-    }
-
-  }
-
-  return <React.Fragment key={keyBase}>{node}</React.Fragment>;
+  // breadcrumb settings from the Tenders Page document
+  crumbs?: { links?: { _key?: string; label?: string; href?: string }[] | null; label?: string | null } | null;
 
 };
 
-const renderBlock = (block: Block, i: number) => {
-
-  if (!block || typeof block !== "object") return null;
-
-  if (block._type === "image" || typeof block.assetUrl === "string") {
-
-    const src = typeof block.assetUrl === "string" ? block.assetUrl : undefined;
-
-    if (!src) return null;
-
-    return (
-
-      <div key={`img-${i}`} className="mt-6">
-
-        <img src={src} alt={block.alt ?? "image"} className="w-full h-auto object-cover" />
-
-      </div>
-
-    );
-
-  }
-
-  if (block._type === "block" && Array.isArray(block.children)) {
-
-    const style = block.style ?? "normal";
-
-    const children = block.children.map((c, idx) => renderSpan(c, block.markDefs, `c-${i}-${idx}`));
-
-    if (style === "h1") return <h1 key={`h1-${i}`} className="text-[30px] md:text-[48px] font-extrabold mt-8 leading-tight">{children}</h1>;
-
-    if (style === "h2") return <h2 key={`h2-${i}`} className="text-[24px] md:text-[36px] font-semibold mt-8 leading-tight">{children}</h2>;
-
-    if (style === "h3") return <h3 key={`h3-${i}`} className="text-[20px] md:text-[28px] font-semibold mt-8 leading-tight">{children}</h3>;
-
-    return <p key={`p-${i}`} className="mt-4 text-base md:text-lg leading-8 text-slate-700">{children}</p>;
-
-  }
-
-  return null;
-
-};
-
-const renderBlocks = (blocks?: Block[] | null) => (Array.isArray(blocks) ? blocks.map((b, idx) => renderBlock(b, idx)) : null);
+// Rich text (bold, italic, highlight, colors, links, lists) — same renderer as the rest of the site
+const renderBlocks = (blocks?: Block[] | null) => <RichText value={blocks} />;
 
 const formatDate = (value?: string | null) => {
 
@@ -282,7 +199,9 @@ export default async function TenderDetailPage(
 
     },
 
-    description[]{..., "assetUrl": asset->url}
+    description[]{..., "assetUrl": asset->url},
+
+    "crumbs": *[_type == "tendersPage"][0]{ "links": detailBreadcrumbLinks[]{_key, label, href}, "label": detailBreadcrumbLabel }
 
   }`;
 
@@ -320,25 +239,30 @@ export default async function TenderDetailPage(
 
   return (
 
-    <main className="bg-[#F3F7FB] text-[#0F172A] font-rubik">
+    <main className="bg-mist text-ink font-rubik">
 
       <PageHeader
         title={tender.title ?? "Procurement Opportunities"}
-        breadcrumbLinks={[
-          { label: "Home", href: "/" },
-          { label: "Tenders", href: "/tenders" },
-        ]}
-        breadcrumbLabel="Tender Details"
+        // Set in Sanity: Tenders Page → "Breadcrumb Links for Each Tender Page"
+        breadcrumbLinks={
+          tender.crumbs?.links?.length
+            ? tender.crumbs.links
+            : [
+                { label: "Home", href: "/" },
+                { label: "Tenders", href: "/tenders" },
+              ]
+        }
+        breadcrumbLabel={tender.crumbs?.label || "Tender Details"}
         headerMessage="Review the tender summary, important dates, location, and downloadable documents below."
       />
 
       <section className="relative z-10 mt-15 w-full mx-auto px-5 md:max-w-[1440px]">
-        <div className="mx-auto max-w-[1140px] border border-slate-200 bg-white p-5 shadow-[0_15px_45px_rgba(2,88,123,0.12)] md:p-7">
+        <div className="mx-auto max-w-[1140px] border border-slate-200 bg-paper p-5 shadow-[0_15px_45px_rgba(2,88,123,0.12)] md:p-7">
           <div className="mb-5 flex flex-wrap items-center gap-2">
             <span className="inline-flex bg-[#F4BA00] px-3 py-1.5 text-xs font-extrabold tracking-wide text-[#1A1A1A]">
               {tender.refNo ?? "NO REF"}
             </span>
-            <span className="inline-flex bg-[#02587B]/10 px-3 py-1.5 text-xs font-bold text-[#02587B]">
+            <span className="inline-flex bg-brand/10 px-3 py-1.5 text-xs font-bold text-brand-fg">
               {tender.category ?? "Uncategorized"}
             </span>
             <span
@@ -351,21 +275,21 @@ export default async function TenderDetailPage(
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="border border-slate-100 bg-[#F5F9FB] p-4">
+            <div className="border border-slate-100 bg-mist p-4">
               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Publish Date</div>
-              <div className="mt-2 font-bold text-[#02587B]">{formatDate(tender.publishDate)}</div>
+              <div className="mt-2 font-bold text-brand-fg">{formatDate(tender.publishDate)}</div>
             </div>
-            <div className="border border-slate-100 bg-[#F5F9FB] p-4">
+            <div className="border border-slate-100 bg-mist p-4">
               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Expiry Date</div>
-              <div className="mt-2 font-bold text-[#02587B]">{formatDate(tender.expirationDate)}</div>
+              <div className="mt-2 font-bold text-brand-fg">{formatDate(tender.expirationDate)}</div>
             </div>
-            <div className="border border-slate-100 bg-[#F5F9FB] p-4">
+            <div className="border border-slate-100 bg-mist p-4">
               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Location</div>
-              <div className="mt-2 font-bold text-[#02587B]">{tender.location ?? "Not specified"}</div>
+              <div className="mt-2 font-bold text-brand-fg">{tender.location ?? "Not specified"}</div>
             </div>
-            <div className="border border-slate-100 bg-[#F5F9FB] p-4">
+            <div className="border border-slate-100 bg-mist p-4">
               <div className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Type</div>
-              <div className="mt-2 font-bold text-[#02587B]">{tender.type ?? "Not specified"}</div>
+              <div className="mt-2 font-bold text-brand-fg">{tender.type ?? "Not specified"}</div>
             </div>
           </div>
         </div>
@@ -379,9 +303,9 @@ export default async function TenderDetailPage(
 
             <div className="lg:col-span-8 space-y-6">
 
-              <section className=" bg-white p-6 md:p-8 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
+              <section className=" bg-paper p-6 md:p-8 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
 
-                <h2 className="text-[24px] md:text-[34px] font-extrabold text-[#0F172A]">Description</h2>
+                <h2 className="text-[24px] md:text-[34px] font-extrabold text-ink">Description</h2>
 
                 <div dir="rtl" style={{textAlign: "justify"}} className="mt-3 prose max-w-none">
 
@@ -399,9 +323,9 @@ export default async function TenderDetailPage(
 
               </section>
 
-              <section className=" bg-white p-6 md:p-8 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
+              <section className=" bg-paper p-6 md:p-8 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
 
-                <h2 className="text-[24px] md:text-[34px] font-extrabold text-[#0F172A]">Attachments</h2>
+                <h2 className="text-[24px] md:text-[34px] font-extrabold text-ink">Attachments</h2>
 
                 {attachments.length > 0 ? (
 
@@ -479,7 +403,7 @@ export default async function TenderDetailPage(
 
             <aside className="lg:col-span-4 space-y-6">
 
-              <section className=" bg-[#02587B] p-6 md:p-7 text-white shadow-[0_12px_40px_rgba(15,23,42,0.12)]">
+              <section className=" bg-brand p-6 md:p-7 text-white shadow-[0_12px_40px_rgba(15,23,42,0.12)]">
 
                 <h2 className="text-[22px] md:text-[28px] font-extrabold">Tender Details</h2>
 
@@ -521,9 +445,9 @@ export default async function TenderDetailPage(
 
               </section>
 
-              <section className=" bg-white p-6 md:p-7 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
+              <section className=" bg-paper p-6 md:p-7 shadow-[0_12px_40px_rgba(15,23,42,0.08)]">
 
-                <h2 className="text-[22px] md:text-[28px] font-extrabold text-[#0F172A]">Contact Person</h2>
+                <h2 className="text-[22px] md:text-[28px] font-extrabold text-ink">Contact Person</h2>
 
                 <div className="mt-5 space-y-4">
 

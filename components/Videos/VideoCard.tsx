@@ -31,7 +31,7 @@ export default function VideoCard({
   return (
     <article className="w-full">
       <div
-        className="bg-white rounded-md overflow-hidden shadow-sm transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.01] hover:shadow-lg"
+        className="bg-paper rounded-md overflow-hidden shadow-sm transition-transform duration-200 ease-out hover:-translate-y-1 hover:scale-[1.01] hover:shadow-lg"
         style={{ willChange: "transform" }}
       >
         <button

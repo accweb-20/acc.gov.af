@@ -1,6 +1,8 @@
 // schemas/jobsPage.ts
 
 import { defineField, defineType } from 'sanity'
+import { richTextField } from './objects/richText'
+import { breadcrumbField } from './import'
 
 export default defineType({
   name: 'jobsPage',
@@ -35,15 +37,27 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
 
+    richTextField({ name: 'description', title: 'Description', images: false }),
+
+    // Breadcrumbs shown at the top of /jobs and of each job page
+    breadcrumbField({
+      initial: [{ _key: 'home', label: 'Home', href: '/' }],
+      description: 'Links shown before "Jobs" on the jobs page. Default: Home.',
+    }),
     defineField({
-      name: 'description',
-      title: 'Description',
-      type: 'array',
-      of: [
-        {
-          type: 'block',
-        },
+      name: 'breadcrumbLabel',
+      title: 'Current Breadcrumb Label',
+      type: 'string',
+      description: 'Defaults to the page title.',
+    }),
+    breadcrumbField({
+      name: 'jobBreadcrumbLinks',
+      title: 'Breadcrumb Links for Each Job Page',
+      initial: [
+        { _key: 'home', label: 'Home', href: '/' },
+        { _key: 'jobs', label: 'Jobs', href: '/jobs' },
       ],
+      description: "Links shown before the job title on every job page. Default: Home / Jobs.",
     }),
   ],
 

@@ -24,6 +24,9 @@ import {
 import { JobCard } from '@/components/jobs/JobCard'
 import { JobFilters } from '@/components/jobs/JobFilters'
 import { LanguageSwitcher } from '@/components/jobs/LanguageSwitcher'
+import PageHeader from '@/components/PageHeader'
+import { BriefcaseBusiness } from 'lucide-react'
+import { hasRich } from '@/lib/imports'
 import '@/styles/jobs-theme.css'
 
 export const revalidate = 60
@@ -61,7 +64,7 @@ export default async function JobsPage({
     hideExpired,
   } = await searchParams
 
-  const [jobs, functionalAreas, workTypes] = await Promise.all([
+  const [jobs, functionalAreas, workTypes, page] = await Promise.all([
     client.fetch<JobCardData[]>(
       allJobsQuery,
       {
@@ -80,73 +83,76 @@ export default async function JobsPage({
     client.fetch<WorkType[]>(
       jobWorkTypesQuery
     ),
+
+    // Breadcrumbs from the "Job Page" document in Sanity
+    client
+      .fetch<JobsCrumbs | null>(
+        `*[_type == "jobsPage"][0]{ title, breadcrumbLabel, description, "links": breadcrumbLinks[]{_key, label, href} }`
+      )
+      .catch(() => null),
   ])
 
+  const crumbs = (page?.links ?? []).filter((l) => l?.label && l?.href) as { _key?: string; label: string; href: string }[]
+  const english = locale === 'en'
+  const CONTAINER = 'mx-auto w-[90%] max-w-[493px] md:w-[93%] md:max-w-[924px] lg:w-[90%] lg:max-w-[1140px]'
+
   return (
-    <main
-      className="jb-root min-h-screen px-4 py-10 sm:px-8 mt-10"
-      dir={localeDir[locale]}
-      data-lang={locale}
-    >
-      <div className="mx-auto max-w-3xl">
-        <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1
-              className="text-2xl font-extrabold sm:text-3xl"
-              style={{ color: 'var(--jb-ink)' }}
-            >
-              {dict.siteTitle}
-            </h1>
+    <main className="bg-mist text-ink">
+      <PageHeader
+        title={english ? page?.title || dict.siteTitle : dict.siteTitle}
+        breadcrumbLinks={crumbs}
+        breadcrumbLabel={english ? page?.breadcrumbLabel || page?.title || 'Jobs' : dict.siteTitle}
+        headerMessage={
+          english
+            ? (hasRich(page?.description) ? page?.description : null) ||
+              'Join Afghan Cart Corporation. Browse our current vacancies, read the job details and apply before the closing date.'
+            : formatActiveCount(dict.activeCount, jobs.length)
+        }
+      />
 
-            <p
-              className="mt-1 text-sm"
-              style={{ color: 'var(--jb-muted)' }}
-            >
+      <div className="jb-root" dir={localeDir[locale]} data-lang={locale}>
+        {/* Count + language */}
+        <div className="border-b border-brand-line/10 bg-paper">
+          <div className={`${CONTAINER} flex flex-wrap items-center justify-between gap-3 py-3`}>
+            <span className="inline-flex items-center gap-2 text-[15px] font-semibold text-ink/70">
+              <span className="grid h-9 w-9 place-items-center bg-brand/10 text-brand-fg">
+                <BriefcaseBusiness size={18} />
+              </span>
               {formatActiveCount(dict.activeCount, jobs.length)}
-            </p>
+            </span>
+            <LanguageSwitcher current={locale} />
           </div>
+        </div>
 
-          <LanguageSwitcher current={locale} />
-        </header>
+        <section className="py-12 md:py-16">
+          <div className={CONTAINER}>
+            <JobFilters functionalAreas={functionalAreas} workTypes={workTypes} dict={dict} />
 
-        <JobFilters
-          functionalAreas={functionalAreas}
-          workTypes={workTypes}
-          dict={dict}
-        />
-
-        {jobs.length === 0 ? (
-          <div
-            className="rounded-xl border border-dashed py-16 text-center"
-            style={{
-              borderColor: 'var(--jb-border)',
-              color: 'var(--jb-muted)',
-            }}
-          >
-            <p
-              className="mb-1 font-semibold"
-              style={{ color: 'var(--jb-ink)' }}
-            >
-              {dict.noJobsFound}
-            </p>
-
-            <p className="text-sm">
-              {dict.noJobsFoundDesc}
-            </p>
+            {jobs.length === 0 ? (
+              <div className="flex flex-col items-center border border-dashed border-brand-line/25 bg-paper px-6 py-14 text-center">
+                <span className="grid h-14 w-14 place-items-center bg-brand/10 text-brand-fg">
+                  <BriefcaseBusiness size={26} />
+                </span>
+                <h3 className="mt-5 text-[20px] font-bold">{dict.noJobsFound}</h3>
+                <p className="mt-2 max-w-md text-[15px] text-ink/60">{dict.noJobsFoundDesc}</p>
+              </div>
+            ) : (
+              <div className="space-y-5">
+                {jobs.map((job) => (
+                  <JobCard key={job._id} job={job} locale={locale} dict={dict} />
+                ))}
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="space-y-4">
-            {jobs.map((job) => (
-              <JobCard
-                key={job._id}
-                job={job}
-                locale={locale}
-                dict={dict}
-              />
-            ))}
-          </div>
-        )}
+        </section>
       </div>
     </main>
   )
+}
+
+type JobsCrumbs = {
+  title?: string | null
+  breadcrumbLabel?: string | null
+  description?: unknown
+  links?: { _key?: string; label?: string; href?: string }[] | null
 }

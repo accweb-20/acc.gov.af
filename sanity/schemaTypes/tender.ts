@@ -1,4 +1,5 @@
 import { defineType, defineField } from "sanity";
+import { richTextField } from "./objects/richText";
 
 export default defineType({
   name: "tender",
@@ -17,7 +18,7 @@ export default defineType({
     defineField({ name: "location", title: "Location", type: "string" }),
     defineField({ name: "type", title: "Type", type: "string", description: "For example: Open Tender, RFQ, RFP, Expression of Interest." }),
     defineField({ name: "attachments", title: "Attachments", type: "array", of: [{ type: "file" }], options: { layout: "grid" } }),
-    defineField({ name: "description", title: "Description", type: "array", of: [{ type: "block" }] }),
+    richTextField({ name: "description", title: "Description", images: false }),
     defineField({
       name: "seo",
       title: "SEO",

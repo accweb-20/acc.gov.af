@@ -217,7 +217,7 @@ export default function ContactForm(): React.ReactElement {
   }
 
   return (
-    <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] text-[#1A1A1A] font-rubik">
+    <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px] text-ink font-rubik">
       <style>{`
         @keyframes shakeX {
           0% { transform: translateX(0); }
@@ -254,8 +254,8 @@ export default function ContactForm(): React.ReactElement {
                     border: "none",
                     boxShadow: errors.first_name ? errorShadow : normalShadow,
                     borderRadius: 0,
-                    background: "white",
-                    color: "#1A1A1A",
+                    background: "var(--color-paper)",
+                    color: "var(--color-ink)",
                   }}
                   placeholder="First Name*"
                   aria-invalid={!!errors.first_name}
@@ -274,8 +274,8 @@ export default function ContactForm(): React.ReactElement {
                     border: "none",
                     boxShadow: errors.last_name ? errorShadow : normalShadow,
                     borderRadius: 0,
-                    background: "white",
-                    color: "#1A1A1A",
+                    background: "var(--color-paper)",
+                    color: "var(--color-ink)",
                   }}
                   placeholder="Last Name"
                   aria-invalid={!!errors.last_name}
@@ -295,8 +295,8 @@ export default function ContactForm(): React.ReactElement {
                   border: "none",
                   boxShadow: errors.email ? errorShadow : normalShadow,
                   borderRadius: 0,
-                  background: "white",
-                  color: "#1A1A1A",
+                  background: "var(--color-paper)",
+                  color: "var(--color-ink)",
                 }}
                 placeholder="Email Address*"
                 aria-invalid={!!errors.email}
@@ -315,8 +315,8 @@ export default function ContactForm(): React.ReactElement {
                   border: "none",
                   boxShadow: errors.subject ? errorShadow : normalShadow,
                   borderRadius: 0,
-                  background: "white",
-                  color: "#1A1A1A",
+                  background: "var(--color-paper)",
+                  color: "var(--color-ink)",
                 }}
                 placeholder="Subject*"
                 aria-invalid={!!errors.subject}
@@ -335,8 +335,8 @@ export default function ContactForm(): React.ReactElement {
                   border: "none",
                   boxShadow: errors.message ? errorShadow : normalShadow,
                   borderRadius: 0,
-                  background: "white",
-                  color: "#1A1A1A",
+                  background: "var(--color-paper)",
+                  color: "var(--color-ink)",
                 }}
                 placeholder="Message*"
                 aria-invalid={!!errors.message}
@@ -355,7 +355,7 @@ export default function ContactForm(): React.ReactElement {
                   backgroundColor: "#F4BA00",
                   clipPath: "polygon(0 0, 100% 20%, 100% 100%, 0% 100%)",
                 }}
-                className="inline-block px-8 py-2 cursor-pointer font-bold text-[16px] text-[#1A1A1A] disabled:opacity-60"
+                className="inline-block px-8 py-2 cursor-pointer font-bold text-[16px] text-ink disabled:opacity-60"
                 aria-disabled={loading}
               >
                 {loading ? "Submitting..." : "Submit"}
@@ -397,7 +397,7 @@ export default function ContactForm(): React.ReactElement {
               {icons.map((icon) => (
                 <a key={icon.alt} href={icon.href} target="_blank" rel="noreferrer" aria-label={icon.alt}>
                   <div
-                    className="w-10 h-10 rounded-full bg-[#02587B] flex items-center justify-center icon-hover"
+                    className="w-10 h-10 rounded-full bg-brand flex items-center justify-center icon-hover"
                     style={{ cursor: "pointer" }}
                   >
                     <div className="relative w-5 h-5">
@@ -414,7 +414,7 @@ export default function ContactForm(): React.ReactElement {
       {/* Toast */}
       {showToast && (
         <div className="fixed left-1/2 transform -translate-x-1/2 bottom-8 z-50">
-          <div className="bg-white px-6 py-3  text-green-700 font-medium" style={{boxShadow: "0 12px 40px rgba(0,0,0,0.18), 0 4px 10px rgba(0,0,0,0.08)"}}>
+          <div className="bg-paper px-6 py-3  text-green-700 font-medium" style={{boxShadow: "0 12px 40px rgba(0,0,0,0.18), 0 4px 10px rgba(0,0,0,0.08)"}}>
             Your message is submitted successfully
           </div>
         </div>

@@ -1,5 +1,6 @@
 // jobs/[lang]/[slug]/page.tsx
 import Link from 'next/link'
+import { localeIntlTag } from '@/lib/i18n/config'
 import { notFound } from 'next/navigation'
 
 import { client } from '@/lib/sanity/client'
@@ -36,6 +37,8 @@ import { JobSidebarFacts } from '@/components/jobs/JobSidebarFacts'
 import { BulletList } from '@/components/jobs/BulletList'
 import { JobCard } from '@/components/jobs/JobCard'
 
+import PageHeader from '@/components/PageHeader'
+import { ArrowLeft, Briefcase, CalendarDays, Clock, MapPin, Send } from 'lucide-react'
 import '@/styles/jobs-theme.css'
 
 /*
@@ -67,6 +70,14 @@ export default async function JobDetailPage({
     jobBySlugQuery,
     { slug }
   )
+
+  // Breadcrumbs from the "Job Page" document in Sanity (default: Home / Jobs)
+  const crumbDoc = await client
+    .fetch<{ links?: { _key?: string; label?: string; href?: string }[] | null } | null>(
+      `*[_type == "jobsPage"][0]{ "links": jobBreadcrumbLinks[]{_key, label, href} }`
+    )
+    .catch(() => null)
+  const crumbLinks = (crumbDoc?.links ?? []).filter((l) => l?.label && l?.href) as { _key?: string; label: string; href: string }[]
 
   if (!job) {
     notFound()
@@ -117,172 +128,92 @@ export default async function JobDetailPage({
     job.closingDate
   )
 
-  return (
-    <main
-      className="jb-root min-h-screen px-4 py-10 sm:px-8 mt-10"
-      dir={localeDir[locale]}
-      data-lang={locale}
-    >
-      <div className="mx-auto max-w-5xl">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-          <Link
-            href={`/jobs/${locale}`}
-            className="text-sm font-semibold"
-            style={{
-              color: 'var(--jb-primary)',
-            }}
-          >
-            {dict.backToJobs}
-          </Link>
+  const CONTAINER = 'mx-auto w-[90%] max-w-[493px] md:w-[93%] md:max-w-[924px] lg:w-[90%] lg:max-w-[1140px]'
+  const closing = job.closingDate
+    ? new Intl.DateTimeFormat(localeIntlTag[locale], { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(job.closingDate))
+    : null
+  const chip = 'inline-flex items-center gap-1.5 bg-white/10 px-3 py-1.5 text-[13px] font-semibold text-white'
 
-          <LanguageSwitcher current={locale} />
+  return (
+    <main className="bg-mist text-ink">
+      <PageHeader
+        title={title || 'Job'}
+        breadcrumbLinks={crumbLinks.length ? crumbLinks : [{ label: 'Home', href: '/' }, { label: 'Jobs', href: '/jobs' }]}
+        breadcrumbLabel={title || 'Job'}
+      >
+        {/* Key facts under the title */}
+        <div className="flex flex-wrap justify-center gap-2" dir={localeDir[locale]}>
+          <StatusBadge status={job.status} closingDate={job.closingDate} dict={dict} />
+          {job.referenceNumber && <span className="jb-mono bg-[#F4BA00] px-3 py-1.5 text-[13px] font-bold text-[#1A1A1A]">Ref {job.referenceNumber}</span>}
+          {location && <span className={chip}><MapPin size={15} className="text-[#F4BA00]" />{location}</span>}
+          {job.workType && <span className={chip}><Briefcase size={15} className="text-[#F4BA00]" />{dict.options.workType[job.workType]}</span>}
+          {closing && <span className={chip}><CalendarDays size={15} className="text-[#F4BA00]" />{dict.fields.closingDate}: {closing}</span>}
+        </div>
+      </PageHeader>
+
+      <div className="jb-root" dir={localeDir[locale]} data-lang={locale}>
+        {/* Back link + language */}
+        <div className="border-b border-brand-line/10 bg-paper">
+          <div className={`${CONTAINER} flex flex-wrap items-center justify-between gap-3 py-3`}>
+            <Link href={`/jobs/${locale}`} className="inline-flex items-center gap-2 text-[15px] font-semibold text-brand-fg hover:underline">
+              <ArrowLeft size={17} className="rtl:rotate-180" />
+              {dict.backToJobs.replace(/^[←→]\s*/, '')}
+            </Link>
+            <LanguageSwitcher current={locale} />
+          </div>
         </div>
 
-        {computedStatus === 'expired' && (
-          <div
-            className="mb-6 rounded-lg border px-4 py-3 text-sm"
-            style={{
-              borderColor: 'var(--jb-expired)',
-              backgroundColor: 'var(--jb-expired-bg)',
-              color: 'var(--jb-expired)',
-            }}
-          >
-            {dict.status.expired}
-            {' — '}
-            {dict.fields.closingDate.toLowerCase()}
-          </div>
-        )}
-
-        {/* Hero */}
-        <header
-          className="mb-8 rounded-xl border p-6 sm:p-8"
-          style={{
-            borderColor: 'var(--jb-border)',
-            backgroundColor: 'var(--jb-surface)',
-          }}
-        >
-          <div className="mb-3 flex flex-wrap items-center gap-2">
-            <StatusBadge
-              status={job.status}
-              closingDate={job.closingDate}
-              dict={dict}
-            />
-
-            {job.referenceNumber && (
-              <span
-                className="jb-mono text-xs"
-                style={{
-                  color: 'var(--jb-muted)',
-                }}
-              >
-                Ref: {job.referenceNumber}
-              </span>
-            )}
-          </div>
-
-          <h1
-            className="mb-2 text-2xl font-extrabold sm:text-3xl"
-            style={{
-              color: 'var(--jb-ink)',
-            }}
-          >
-            {title}
-          </h1>
-
-          {location && (
-            <p
-              className="text-sm"
-              style={{
-                color: 'var(--jb-muted)',
-              }}
-            >
-              📍 {location}
-            </p>
-          )}
-        </header>
-
-        <div className="grid gap-8 lg:grid-cols-[2fr_1fr]">
-          <article>
-            {jobSummary && (
-              <section className="mb-8">
-                <h2
-                  className="mb-3 text-lg font-bold"
-                  style={{
-                    color: 'var(--jb-ink)',
-                  }}
-                >
-                  {dict.fields.jobSummary}
-                </h2>
-
-                <p
-                  className="leading-relaxed"
-                  style={{
-                    color: 'var(--jb-muted)',
-                  }}
-                >
-                  {jobSummary}
-                </p>
-              </section>
+        <section className="py-12 md:py-16">
+          <div className={CONTAINER}>
+            {computedStatus !== 'open' && (
+              <div className="mb-8 flex items-center gap-3 border-s-4 px-5 py-4 text-[15px] font-semibold" style={{ borderColor: 'var(--jb-expired)', backgroundColor: 'var(--jb-expired-bg)', color: 'var(--jb-expired)' }}>
+                <Clock size={19} className="shrink-0" />
+                {dict.status[computedStatus]}
+                {closing && ` — ${dict.fields.closingDate}: ${closing}`}
+              </div>
             )}
 
-            <BulletList
-              title={dict.fields.keyResponsibilities}
-              items={responsibilities}
-            />
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10">
+              <article className="space-y-6">
+                {jobSummary && (
+                  <section className="bg-paper p-6 md:p-8">
+                    <h2 className="text-[22px] font-extrabold md:text-[26px]">{dict.fields.jobSummary}</h2>
+                    <span className="mt-3 block h-1 w-12 bg-[#F4BA00]" />
+                    <p className="mt-6 whitespace-pre-line text-[16px] leading-relaxed text-ink/75">{jobSummary}</p>
+                  </section>
+                )}
 
-            <BulletList
-              title={dict.fields.qualifications}
-              items={qualifications}
-            />
+                <BulletList title={dict.fields.keyResponsibilities} items={responsibilities} />
+                <BulletList title={dict.fields.qualifications} items={qualifications} />
 
-            {submissionGuidelines && (
-              <section
-                className="mb-8 rounded-lg p-5 text-white"
-                style={{
-                  backgroundColor: 'var(--jb-primary)',
-                }}
-              >
-                <h2 className="mb-2 text-lg font-bold">
-                  {dict.fields.submissionGuidelines}
-                </h2>
+                {submissionGuidelines && (
+                  <section className="relative overflow-hidden bg-brand p-6 text-white md:p-8">
+                    <span className="absolute end-0 top-0 h-10 w-10 bg-[#F4BA00] [clip-path:polygon(0_0,100%_0,100%_100%)] rtl:[clip-path:polygon(0_0,100%_0,0_100%)]" />
+                    <h2 className="flex items-center gap-3 text-[22px] font-extrabold md:text-[26px]">
+                      <Send size={22} className="text-[#F4BA00] rtl:-scale-x-100" />
+                      {dict.fields.submissionGuidelines}
+                    </h2>
+                    <p className="mt-4 whitespace-pre-line leading-relaxed text-white/85">{submissionGuidelines}</p>
+                  </section>
+                )}
+              </article>
 
-                <p className="leading-relaxed opacity-90">
-                  {submissionGuidelines}
-                </p>
-              </section>
-            )}
+              <JobSidebarFacts job={job} locale={locale} dict={dict} />
+            </div>
 
             {relatedJobs.length > 0 && (
-              <section>
-                <h2
-                  className="mb-4 border-b-2 pb-2 text-lg font-bold"
-                  style={{
-                    borderColor: 'var(--jb-border)',
-                  }}
-                >
-                  {dict.relatedJobs}
-                </h2>
-
-                <div className="space-y-4">
+              <section className="mt-14">
+                <h2 className="text-[26px] font-extrabold md:text-[32px]">{dict.relatedJobs}</h2>
+                <span className="mt-3 block h-1 w-16 bg-[#F4BA00]" />
+                <div className="mt-8 space-y-5">
                   {relatedJobs.map((related) => (
-                    <JobCard
-                      key={related._id}
-                      job={related}
-                      locale={locale}
-                      dict={dict}
-                    />
+                    <JobCard key={related._id} job={related} locale={locale} dict={dict} />
                   ))}
                 </div>
               </section>
             )}
-          </article>
-
-          <JobSidebarFacts
-            job={job}
-            locale={locale}
-            dict={dict}
-          />
-        </div>
+          </div>
+        </section>
       </div>
     </main>
   )

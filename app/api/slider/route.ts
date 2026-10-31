@@ -65,6 +65,11 @@ function pickFirst(...vals: Array<string | null | undefined>): string | null {
   return null;
 }
 
+/** Ask the Sanity image CDN for a right-sized, modern-format image instead of the original upload. */
+function sized(url: string | null, width: number): string | null {
+  return url ? `${url}${url.includes("?") ? "&" : "?"}w=${width}&q=75&auto=format&fit=max` : null;
+}
+
 export async function GET() {
   try {
     const data = await client.fetch<SanityRawItem[]>(groq);
@@ -77,8 +82,8 @@ export async function GET() {
     const slides: Slide[] = data.map((s: SanityRawItem) => ({
       id: s._id ?? null,
       title: s.title ?? null,
-      desktop_image_url: pickFirst(s.desktop_image_url_a, s.desktop_image_url_b, s.desktop_image_url_c),
-      mobile_image_url: pickFirst(s.mobile_image_url_a, s.mobile_image_url_b, s.mobile_image_url_c),
+      desktop_image_url: sized(pickFirst(s.desktop_image_url_a, s.desktop_image_url_b, s.desktop_image_url_c), 1920),
+      mobile_image_url: sized(pickFirst(s.mobile_image_url_a, s.mobile_image_url_b, s.mobile_image_url_c), 900),
       link_url: s.link_url ?? null,
       order: typeof s.order === "number" ? s.order : null,
     }));

@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap')
-layer(base);
-
 @import 'tailwindcss';
+/* make sure Tailwind always reads every component folder (new files included) */
+@source "../components";
+@source "../app";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -57,7 +57,80 @@ layer(base);
   --shadow-btn-light: 0px 1px 2px rgba(0, 0, 0, 0.1);
 
   --drop-shadow-three: 0px 5px 15px rgba(6, 8, 15, 0.05);
+
+  /* Site colours. Light mode = the original colours; dark mode values are set in .dark below. */
+  --color-ink: #1a1a1a;          /* main text */
+  --color-paper: #ffffff;        /* cards, page background */
+  --color-mist: #f4f8fa;         /* light section background */
+  --color-smoke: #f5f5f5;        /* grey boxes */
+  --color-tint: #e3eef2;         /* light blue chips / boxes */
+  --color-tint-strong: #d3e5ec;  /* stronger light blue */
+  --color-brand: #02587b;        /* blue backgrounds (header bands, buttons) */
+  --color-brand-fg: #02587b;     /* blue text and links */
+  --color-brand-line: #02587b;   /* blue borders */
+  --color-deep: #013f59;         /* deep blue bands */
+  --color-alert: #b60000;        /* red text */
 }
+
+/* ---------- Dark mode (html.dark) ---------- */
+html.dark {
+  color-scheme: dark;
+  --color-ink: #e6edf1;
+  --color-paper: #0f1e26;
+  --color-mist: #0a161d;
+  --color-smoke: #172830;
+  --color-tint: #15313d;
+  --color-tint-strong: #1d4050;
+  --color-brand: #052433;  /* deep dark version of the brand blue */
+  --color-brand-fg: #74c4e6;
+  --color-brand-line: #5fa9c8;
+  --color-deep: #03121a;
+  --color-alert: #ff7b7b;
+
+  /* Tailwind greys used for muted text, skeletons and small boxes */
+  --color-gray-50: #10202a;
+  --color-gray-100: #172a33;
+  --color-gray-200: #20353f;
+  --color-gray-300: #2b434e;
+  --color-gray-400: #7f939c;
+  --color-gray-500: #93a4ac;
+  --color-gray-600: #aab7bd;
+  --color-gray-700: #c3ced3;
+  --color-gray-900: #e6edf1;
+  --color-slate-50: #12232c;
+  --color-slate-100: #1b2f39;
+  --color-slate-200: #253b46;
+  --color-slate-500: #93a4ac;
+  --color-slate-600: #aab7bd;
+  --color-slate-900: #e6edf1;
+  --color-emerald-50: #0f2e25;
+  --color-emerald-700: #6ee7b7;
+  --color-rose-50: #3a1518;
+  --color-rose-700: #fda4af;
+  --color-red-600: #f87171;
+  --color-green-700: #86efac;
+
+  /* Job board pages */
+  --jb-primary: #74c4e6;
+  --jb-primary-dark: #052433;
+  --jb-primary-light: #15313d;
+  --jb-ink: #e6edf1;
+  --jb-muted: #9fb0b8;
+  --jb-border: #20353f;
+  --jb-bg: #0a161d;
+  --jb-surface: #0f1e26;
+  --jb-open: #6ee7b7;
+  --jb-open-bg: #0f2e25;
+  --jb-expired: #f0c27b;
+  --jb-expired-bg: #33270f;
+  --jb-closed: #aab7bd;
+  --jb-closed-bg: #1b2f39;
+}
+/* Yellow buttons and labels keep dark text in dark mode (hover colours on them still win) */
+html.dark .bg-\[\#F4BA00\] {
+  color: #1a1a1a;
+}
+
 
 @utility container {
   margin-inline: auto;
@@ -124,12 +197,32 @@ layer(base);
 
 @layer base {
   body {
-    font-family: "Inter", sans-serif;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   }
 }
 
 @layer components {
   input[type="checkbox"]:checked ~ label span svg {
     @apply inline-flex;
+  }
+}
+
+/* Pointer cursor on everything clickable (Tailwind v4 resets buttons to the default arrow) */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  label[for],
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="submit"],
+  input[type="button"],
+  input[type="file"] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled="true"] {
+    cursor: not-allowed;
   }
 }

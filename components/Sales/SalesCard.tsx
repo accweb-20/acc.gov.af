@@ -242,7 +242,7 @@ export default function SalesCard({ item }: { item: SalesItem }) {
                 clipPath: "polygon(0 0, 100% 20%, 100% 100%, 0% 100%)",
                 color: "#1A1A1A",
                 fontWeight: 800,
-                fontFamily: "Rubik, system-ui, -apple-system, 'Segoe UI', Roboto, Arial",
+                fontFamily: "inherit",
                 textDecoration: "none",
                 borderRadius: 0,
                 fontSize: 14,

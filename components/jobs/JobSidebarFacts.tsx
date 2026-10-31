@@ -1,3 +1,4 @@
+import { ClipboardList } from 'lucide-react'
 import type { JobPosting } from '@/types/job'
 import type { Locale } from '@/lib/i18n/config'
 import { localeIntlTag } from '@/lib/i18n/config'
@@ -44,23 +45,16 @@ export function JobSidebarFacts({ job, locale, dict }: { job: JobPosting; locale
   ].filter((row) => row.value)
 
   return (
-    <aside
-      className="h-fit rounded-xl border p-5 lg:sticky lg:top-6"
-      style={{ borderColor: 'var(--jb-border)', backgroundColor: 'var(--jb-surface)' }}
-    >
-      <h2
-        className="mb-4 border-b pb-3 text-sm font-bold uppercase tracking-wide"
-        style={{ borderColor: 'var(--jb-border)', color: 'var(--jb-primary)' }}
-      >
+    <aside className="h-fit border-t-4 border-brand-line bg-paper shadow-[0_10px_30px_rgba(2,88,123,0.07)] lg:sticky lg:top-24">
+      <h2 className="flex items-center gap-2 bg-brand px-5 py-4 text-[15px] font-bold uppercase tracking-[0.12em] text-white">
+        <ClipboardList size={18} className="text-[#F4BA00]" />
         {dict.jobOverview}
       </h2>
-      <dl className="space-y-3">
+      <dl className="divide-y divide-brand-line/10 px-5">
         {rows.map((row) => (
-          <div key={row.label} className="flex justify-between gap-3 text-sm">
-            <dt style={{ color: 'var(--jb-muted)' }}>{row.label}</dt>
-            <dd className="text-right font-medium" style={{ color: 'var(--jb-ink)' }}>
-              {row.value}
-            </dd>
+          <div key={row.label} className="flex justify-between gap-4 py-3 text-[14px]">
+            <dt className="text-ink/60">{row.label}</dt>
+            <dd className="text-end font-semibold text-ink">{row.value}</dd>
           </div>
         ))}
       </dl>

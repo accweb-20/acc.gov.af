@@ -1,9 +1,8 @@
 // components/Footer/index.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { client, getImageUrl } from "../../sanity/lib/client";
+import { ArrowRight, ChevronRight, Mail, MapPin, Phone } from "lucide-react";
 
 /* ---------- Types ---------- */
 
@@ -30,44 +29,38 @@ type FooterItem = {
 type FooterColumn = {
   order?: number | null;
   title?: string | null;
+  titleLink?: InternalRefDoc | null;
   items?: FooterItem[] | null;
-};
-
-type SocialIconAsset = {
-  asset?: {
-    _ref?: string;
-    _id?: string;
-  };
 };
 
 type SocialLink = {
   order?: number | null;
   label?: string | null;
   url?: string | null;
-  icon?: SocialIconAsset | null;
+  iconUrl?: string | null; // icon uploaded in Sanity (Footer → Social links)
   external?: boolean | null;
 };
 
-type FooterDocument = {
+export type FooterDocument = {
   columns?: FooterColumn[] | null;
   copyrightText?: string | null;
   socialLinks?: SocialLink[] | null;
+  showProducts?: boolean | null;
+  productCategories?: { title?: string | null; href?: string | null }[] | null;
+  aboutText?: string | null;
+  address?: string | null;
+  email?: string | null;
+  phones?: string[] | null;
 };
 
-/* ---------- GROQ ---------- */
-const FOOTER_QUERY = `*[_type == "footer"][0]{
-  "columns": columns[] {
-    order,
-    title,
-    "items": items[] {
-      order,
-      label,
-      "link": link { linkType, externalUrl, openInNewTab, "internalRef": internalRef->{_id,_type,"slug":slug.current,title} }
-    }
-  },
-  copyrightText,
-  "socialLinks": socialLinks[] { order, label, url, "icon": icon{ asset->{_ref,_id} }, external }
-}`;
+// Used until the fields are filled in Sanity (Footer → contact details)
+const DEFAULTS = {
+  aboutText: "Afghan Cart Corporation supports Afghanistan’s trading sector through import, export and sales – trusted since 1978.",
+  address: "Khwaja Rawash Street, 9th District, Kabul, Afghanistan",
+  email: "info@acc.gov.af",
+  phones: ["0202 109 420", "0093 74 5700 015"],
+};
+
 
 /* ---------- Helper: Detect Platform ---------- */
 function getHostFromUrl(urlString: string | null | undefined): string | null {
@@ -103,173 +96,43 @@ function detectPlatform(label: string | null | undefined, url?: string | null): 
   return "other";
 }
 
-/* ---------- Small component: Inline an SVG from a URL ---------- */
-/**
- * Fetches the raw SVG text, removes inline fills/strokes, ensures svg uses `fill="currentColor"`,
- * then dangerously inlines it so the SVG inherits `color` from the parent element.
- *
- * NOTE: We only fetch and inline when we detect the asset is an SVG (by assetRef containing '-svg' or url ending with '.svg').
- * This allows exact coloring via CSS (hover:text-[#F4BA00]).
- */
-function SvgInline(props: { src: string; className?: string; alt?: string }) {
-  const { src, className } = props;
-  const [svgText, setSvgText] = useState<string | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    async function fetchSvg() {
-      try {
-        const res = await fetch(src);
-        if (!res.ok) throw new Error("SVG fetch failed");
-        const raw = await res.text();
-
-        // Remove hard-coded fill/stroke attributes to let currentColor control them.
-        // This is a simple heuristic — works on most authored SVGs. You can extend if needed.
-        let cleaned = raw.replace(/\sfill="[^"]*"/gi, ""); // remove fill="..."
-        cleaned = cleaned.replace(/\sstroke="[^"]*"/gi, ""); // remove stroke="..."
-        // Ensure svg tag has fill="currentColor" (if not present)
-        cleaned = cleaned.replace(/<svg([^>]*)>/i, (match, group1) => {
-          // if already has fill or style, leave, otherwise inject fill=currentColor
-          if (/fill=/.test(group1) || /style=/.test(group1)) {
-            return `<svg${group1}>`;
-          }
-          return `<svg${group1} fill="currentColor">`;
-        });
-
-        if (mounted) setSvgText(cleaned);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.warn("Failed to fetch/inline SVG", src, err);
-        if (mounted) setSvgText(null);
-      }
-    }
-
-    fetchSvg();
-    return () => {
-      mounted = false;
-    };
-  }, [src]);
-
-  if (!svgText) {
-    // fallback small invisible box so layout doesn't jump
-    return <span className={className} style={{ display: "inline-block", width: 24, height: 24 }} />;
-  }
-
-  return (
-    <span
-      className={className}
-      // svgText comes from your Sanity CDN; we assume it's trusted content created by you.
-      dangerouslySetInnerHTML={{ __html: svgText }}
-      aria-hidden
-    />
-  );
-}
-
 /* ---------- Component ---------- */
 
-export default function Footer() {
-  const [doc, setDoc] = useState<FooterDocument | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+/** Pages that have no slug field get a fixed address. */
+const TYPE_PATHS: Record<string, string> = {
+  home: "/",
+  servicesPage: "/services",
+  import: "/services/imports",
+  export: "/services/exports",
+  sales: "/services/sales",
+  tendersPage: "/tenders",
+  jobsPage: "/jobs",
+};
 
-  useEffect(() => {
-    let mounted = true;
-    client
-      .fetch<FooterDocument>(FOOTER_QUERY)
-      .then((res) => {
-        if (!mounted) return;
-        setDoc(res ?? null);
-      })
-      .catch((err) => {
-        // eslint-disable-next-line no-console
-        console.error("Error fetching footer:", err);
-        setDoc(null);
-      })
-      .finally(() => {
-        if (mounted) setLoading(false);
-      });
+function refHref(ref?: InternalRefDoc | null): string | null {
+  if (!ref) return null;
+  if (ref.slug) return `/${String(ref.slug).replace(/^\/+/, "")}`;
+  if (ref._type && TYPE_PATHS[ref._type]) return TYPE_PATHS[ref._type];
+  return null;
+}
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
-
-  // Skeleton while loading (keeps same layout)
-  if (loading) {
-    return (
-      <footer className="relative z-10 bg-[#02587B] text-[#F5F5F5] pt-16 md:pt-20 lg:pt-24">
-        <div className="container mx-auto px-4">
-          <div className="-mx-4 flex flex-wrap">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="w-full sm:w-1/2 md:w-1/2 lg:w-2/12 xl:w-2/12 px-4 mb-8">
-                <div className="mb-6 h-6 bg-[#0d6b83] animate-pulse rounded" />
-                <ul>
-                  <li className="h-4 mb-3 bg-[#0d6b83] w-3/4 animate-pulse rounded" />
-                  <li className="h-4 mb-3 bg-[#0d6b83] w-2/3 animate-pulse rounded" />
-                  <li className="h-4 mb-3 bg-[#0d6b83] w-1/2 animate-pulse rounded" />
-                </ul>
-              </div>
-            ))}
-          </div>
-
-          <div className="h-px w-full bg-linear-to-r from-transparent via-[#D2D8E183] to-transparent dark:via-[#959CB183]" />
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between py-8">
-            <div className="text-left text-base">
-              <div className="h-4 w-48 bg-[#0d6b83] animate-pulse rounded" />
-            </div>
-
-            <div className="flex items-center mt-4 md:mt-0 lg:mr-6">
-              {[0, 1, 2].map((i) => (
-                <div key={i} className="mr-6 w-6 h-6 bg-[#0d6b83] animate-pulse rounded" />
-              ))}
-            </div>
-          </div>
-        </div>
-      </footer>
-    );
-  }
-
+export default function Footer({ doc, logo, name: logoName }: { doc?: FooterDocument | null; logo?: string | null; name?: string | null }) {
   const columns = (doc?.columns ?? []).slice().sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0));
 
   function resolveHref(link?: LinkObject | null): string {
     if (!link) return "#";
     if (link.linkType === "external" && link.externalUrl) return link.externalUrl;
-    const ref = link.internalRef;
-    if (ref?.slug) return `/${ref.slug}`;
-    if (ref?._type && ref?._id) return `/${ref._type}/${ref._id}`;
-    return "#";
+    return refHref(link.internalRef) ?? "#";
   }
 
-  function renderSocialIcon(s: SocialLink, index: number) {
+  function renderSocialIcon(s: SocialLink) {
     const label = s.label ?? "";
-    const url = s.url ?? "";
-    const platform = detectPlatform(label, url);
+    const platform = detectPlatform(label, s.url);
 
-    // Safely extract an assetRef string if present
-    const assetRef = s.icon?.asset?._ref ?? s.icon?.asset?._id ?? undefined;
-    const src = assetRef ? getImageUrl(assetRef, { width: 200, height: 200 }) : null;
-
-    // If we have an SVG assetRef (Sanity asset refs include "-svg" for SVGs), inline it for exact coloring.
-    const looksLikeSvg = typeof assetRef === "string" && assetRef.toLowerCase().includes("-svg");
-
-    if (src && looksLikeSvg) {
-      // Inline the SVG so it gets exact color from parent text (currentColor)
-      return <SvgInline src={src} className="w-6 h-6" alt={label || platform} />;
-    }
-
-    if (src) {
-      // non-SVG image: use <img> with filter approximation on hover
-      const hovered = hoverIndex === index;
-      const style: React.CSSProperties = {
-        width: 24,
-        height: 24,
-        objectFit: "contain",
-        transition: "filter 160ms ease, transform 160ms ease",
-        transform: hovered ? "scale(1.06)" : "scale(1)",
-        filter: hovered ? "sepia(1) saturate(6) hue-rotate(10deg) brightness(1)" : "none",
-      };
-      return <img src={src} alt={label || platform} style={style} />;
+    // Icon uploaded in Sanity: shown as it is
+    if (s.iconUrl) {
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img src={s.iconUrl} alt="" className="h-5 w-5 object-contain" />;
     }
 
     // Fallback inline SVG (these use currentColor and will match hover color exactly)
@@ -301,6 +164,12 @@ export default function Footer() {
             />
           </svg>
         );
+      case "whatsapp":
+        return (
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+            <path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z" />
+          </svg>
+        );
       default:
         return (
           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
@@ -310,90 +179,167 @@ export default function Footer() {
     }
   }
 
+  const name = (logoName || "Afghan Cart").toUpperCase();
+  const about = doc?.aboutText || DEFAULTS.aboutText;
+  const address = doc?.address || DEFAULTS.address;
+  const email = doc?.email || DEFAULTS.email;
+  const phones = doc?.phones?.length ? doc.phones : DEFAULTS.phones;
+  // Products column: each category title once, at most 8
+  const seen = new Set<string>();
+  const products = (doc?.showProducts === false ? [] : doc?.productCategories ?? [])
+    .filter((c) => c.title && c.href && !seen.has(c.title.toLowerCase()) && seen.add(c.title.toLowerCase()))
+    .slice(0, 8);
+  const socials = (doc?.socialLinks ?? []).slice().sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0));
+  const linkCls = "group inline-flex items-start gap-1.5 py-1.5 text-[15px] text-white/75 transition hover:text-white";
+
   return (
-    <footer className="relative z-10 bg-[#02587B] text-[#F5F5F5] pt-16 md:pt-20 lg:pt-24">
-      <div className=" mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px]">
-        <div className=" flex flex-wrap">
-          {columns.map((col, idx) => {
-            const widthClass =
-              idx === 0 || idx === 1 ? "w-full sm:w-1/2 md:w-1/2 lg:w-2/12 xl:w-2/12" : "w-full md:w-1/2 lg:w-4/12 xl:w-3/12";
+    <footer className="relative z-10 overflow-hidden bg-brand text-white">
+      {/* yellow line + soft shape */}
+      <span className="absolute inset-x-0 top-0 h-1 bg-[#F4BA00]" />
+      <span className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rotate-12 border-[3px] border-white/[0.06]" />
 
-            return (
-              <div key={String(idx)} className={`${widthClass} `}>
-                <div className="mb-12 lg:mb-16">
-                  <h2 className="mb-6 text-xl font-bold">{col.title}</h2>
-                  <ul>
-                    {(col.items ?? [])
-                      .slice()
-                      .sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0))
-                      .map((it, i) => {
-                        const label = it?.label ?? it?.link?.internalRef?.title ?? "Untitled";
-                        const href = resolveHref(it?.link ?? null);
-                        const openNew = Boolean(it?.link?.openInNewTab);
-                        const isExternal = it?.link?.linkType === "external";
-
-                        return (
-                          <li key={String(i)}>
-                            {isExternal ? (
-                              <a
-                                href={href}
-                                target={openNew ? "_blank" : undefined}
-                                rel={openNew ? "noopener noreferrer" : undefined}
-                                className="mb-4 inline-block text-base duration-300 hover:text-[#F4BA00]"
-                              >
-                                {label}
-                              </a>
-                            ) : (
-                              <Link href={href} className="mb-4 inline-block text-base duration-300 hover:text-[#F4BA00]">
-                                {label}
-                              </Link>
-                            )}
-                          </li>
-                        );
-                      })}
-                  </ul>
-                </div>
+      <div className="relative mx-auto w-[90%] max-w-[493px] md:w-[93%] md:max-w-[924px] lg:w-[90%] lg:max-w-[1140px] py-14 md:py-16">
+        <div className="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-[minmax(0,1.5fr)_repeat(var(--cols),minmax(0,1fr))_minmax(0,1.4fr)] lg:gap-12" style={{ ["--cols" as string]: Math.max(columns.length + (products.length ? 1 : 0), 1) }}>
+          {/* Company */}
+          <div className="col-span-2 lg:col-span-1">
+            <Link href="/" className="inline-flex items-center gap-3" aria-label={`${name} – home`}>
+              {logo && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logo} alt="" className="h-14 w-auto" />
+              )}
+              <span className="leading-none">
+                <b className="block text-[19px] font-extrabold tracking-wide">{name}</b>
+                <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.28em] text-[#F4BA00]">Corporation</span>
+              </span>
+            </Link>
+            <p className="mt-5 max-w-sm text-[15px] leading-relaxed text-white/70">{about}</p>
+            {socials.length > 0 && (
+              <div className="mt-6 flex flex-wrap gap-2.5">
+                {socials.map((s, i) => {
+                  const external = s?.external ?? true;
+                  return (
+                    <a
+                      key={String(i)}
+                      href={s?.url ?? "#"}
+                      aria-label={s?.label ?? `social-${i}`}
+                      target={external ? "_blank" : undefined}
+                      rel={external ? "noopener noreferrer" : undefined}
+                      className="grid h-11 w-11 place-items-center rounded-full bg-white text-[#02587B] shadow-[0_6px_16px_rgba(0,0,0,0.15)] transition hover:-translate-y-0.5 hover:bg-[#F4BA00]"
+                    >
+                      <span className="inline-flex h-5 w-5 items-center justify-center">{renderSocialIcon(s)}</span>
+                    </a>
+                  );
+                })}
               </div>
-            );
-          })}
-        </div>
-
-        <div className="h-px w-full bg-linear-to-r from-transparent via-[#D2D8E183] to-transparent dark:via-[#959CB183]"></div>
-
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between py-8">
-          <div className="text-left text-base">
-            {doc?.copyrightText ? (
-              <span>{doc.copyrightText}</span>
-            ) : (
-              <span>Copyright © {new Date().getFullYear()} – Afghan Cart State-Owned Corporation</span>
             )}
           </div>
 
-          <div className="flex items-center mt-4 md:mt-0 lg:mr-6">
-            {(doc?.socialLinks ?? [])
-              .slice()
-              .sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0))
-              .map((s, i) => {
-                const href = s?.url ?? "#";
-                const external = s?.external ?? true;
-                return (
-                  <a
-                    key={String(i)}
-                    href={href}
-                    aria-label={s?.label ?? `social-${i}`}
-                    target={external ? "_blank" : undefined}
-                    rel={external ? "noopener noreferrer" : undefined}
-                    className="mr-6 duration-300 hover:text-[#F4BA00] inline-flex items-center"
-                    onMouseEnter={() => setHoverIndex(i)}
-                    onMouseLeave={() => setHoverIndex(null)}
-                  >
-                    <span className="inline-flex items-center justify-center w-6 h-6 text-current">
-                      {renderSocialIcon(s, i)}
-                    </span>
-                  </a>
-                );
-              })}
+          {/* Link columns from Sanity */}
+          {columns.map((col, idx) => (
+            <div key={String(idx)}>
+              <h2 className="text-[13px] font-bold uppercase tracking-[0.16em] text-white">
+                {refHref(col.titleLink) ? (
+                  <Link href={refHref(col.titleLink)!} className="transition hover:text-[#F4BA00]">
+                    {col.title}
+                  </Link>
+                ) : (
+                  col.title
+                )}
+              </h2>
+              <span className="mb-4 mt-3 block h-[3px] w-8 bg-[#F4BA00]" />
+              <ul>
+                {(col.items ?? [])
+                  .slice()
+                  .sort((a, b) => (a?.order ?? 0) - (b?.order ?? 0))
+                  .map((it, i) => {
+                    const label = it?.label ?? it?.link?.internalRef?.title ?? "Untitled";
+                    const href = resolveHref(it?.link ?? null);
+                    const openNew = Boolean(it?.link?.openInNewTab);
+                    const inner = (
+                      <>
+                        <ChevronRight size={14} className="mt-[5px] shrink-0 text-[#F4BA00] transition group-hover:translate-x-0.5" />
+                        {label}
+                      </>
+                    );
+                    return (
+                      <li key={String(i)}>
+                        {it?.link?.linkType === "external" ? (
+                          <a href={href} target={openNew ? "_blank" : undefined} rel={openNew ? "noopener noreferrer" : undefined} className={linkCls}>
+                            {inner}
+                          </a>
+                        ) : (
+                          <Link href={href} className={linkCls}>
+                            {inner}
+                          </Link>
+                        )}
+                      </li>
+                    );
+                  })}
+              </ul>
+            </div>
+          ))}
+
+          {/* Products: product categories (automatic) */}
+          {products.length > 0 && (
+            <div className="col-span-2 lg:col-span-1">
+              <h2 className="text-[13px] font-bold uppercase tracking-[0.16em] text-white">
+                <Link href="/services" className="transition hover:text-[#F4BA00]">
+                  Products
+                </Link>
+              </h2>
+              <span className="mb-4 mt-3 block h-[3px] w-8 bg-[#F4BA00]" />
+              <ul className="grid grid-cols-2 gap-x-6 lg:block">
+                {products.map((c) => (
+                  <li key={c.href}>
+                    <Link href={c.href!} className={linkCls}>
+                      <ChevronRight size={14} className="mt-[5px] shrink-0 text-[#F4BA00] transition group-hover:translate-x-0.5" />
+                      {c.title}
+                    </Link>
+                  </li>
+                ))}
+                <li>
+                  <Link href="/services" className="group mt-1 inline-flex items-center gap-1.5 py-1.5 text-[14px] font-semibold text-[#F4BA00] transition hover:text-white">
+                    All products <ArrowRight size={14} className="transition group-hover:translate-x-0.5" />
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          )}
+
+          {/* Contact */}
+          <div className="col-span-2 lg:col-span-1">
+            <h2 className="text-[13px] font-bold uppercase tracking-[0.16em] text-white">Contact</h2>
+            <span className="mb-4 mt-3 block h-[3px] w-8 bg-[#F4BA00]" />
+            <ul className="space-y-4 text-[15px] text-white/75">
+              <li className="flex gap-3">
+                <MapPin size={18} className="mt-0.5 shrink-0 text-[#F4BA00]" />
+                <span>{address}</span>
+              </li>
+              <li className="flex gap-3">
+                <Mail size={18} className="mt-0.5 shrink-0 text-[#F4BA00]" />
+                <a href={`mailto:${email}`} className="transition hover:text-white">
+                  {email}
+                </a>
+              </li>
+              <li className="flex gap-3">
+                <Phone size={18} className="mt-0.5 shrink-0 text-[#F4BA00]" />
+                <span className="flex flex-col gap-1">
+                  {phones.map((p) => (
+                    <a key={p} href={`tel:${p.replace(/[^\d+]/g, "")}`} className="transition hover:text-white">
+                      {p}
+                    </a>
+                  ))}
+                </span>
+              </li>
+            </ul>
           </div>
+        </div>
+      </div>
+
+      {/* Bottom bar */}
+      <div className="relative bg-deep">
+        <div className="mx-auto w-[90%] max-w-[493px] md:w-[93%] md:max-w-[924px] lg:w-[90%] lg:max-w-[1140px] flex flex-col gap-3 py-5 text-[14px] text-white/65 sm:flex-row sm:items-center sm:justify-between">
+          <span>{doc?.copyrightText || `Copyright © ${new Date().getFullYear()} Afghan Cart Corporation`}</span>
         </div>
       </div>
     </footer>

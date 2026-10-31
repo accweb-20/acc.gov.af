@@ -1,4 +1,6 @@
 import { defineType, defineField, defineArrayMember } from "sanity";
+import { headerMessageFields, richTextField } from "./objects/richText";
+
 
 const breadcrumbLink = defineArrayMember({
   name: "breadcrumbLink", title: "Breadcrumb Link", type: "object",
@@ -16,12 +18,12 @@ export default defineType({
     defineField({ name: "slug", title: "Slug (URL)", type: "slug", options: { source: "title", maxLength: 96 }, validation: (Rule) => Rule.required() }),
     defineField({ name: "breadcrumbLinks", title: "Breadcrumb Links", type: "array", of: [breadcrumbLink], description: "Optional links displayed before the current page." }),
     defineField({ name: "breadcrumbLabel", title: "Current Breadcrumb Label", type: "string", description: "Defaults to the page title when blank." }),
-    defineField({ name: "headerMessage", title: "Header Supporting Message", type: "text", rows: 3, description: "Short message displayed below the page title." }),
+    ...headerMessageFields(),
     defineField({ name: "introTitle", title: "Intro Title", type: "string" }),
-    defineField({ name: "introMessage", title: "Intro Message", description: "Rich text for the intro message.", type: "array", of: [defineArrayMember({ type: "block" }), defineArrayMember({ type: "image" })] }),
+    richTextField({ name: "introMessage", title: "Intro Message" }),
     defineField({ name: "introBackground", title: "Intro Deep Teal Blue Background Color", description: "Enable the teal-blue background for the intro section.", type: "object", fields: [defineField({ name: "enabled", title: "Enable Deep Teal Blue Background", type: "boolean", initialValue: false })] }),
     defineField({ name: "bodyTitle", title: "Body Title", type: "string" }),
-    defineField({ name: "bodyMessage", title: "Body Message", description: "Rich text for the body message.", type: "array", of: [defineArrayMember({ type: "block" }), defineArrayMember({ type: "image" })] }),
+    richTextField({ name: "bodyMessage", title: "Body Message" }),
     defineField({ name: "bodyBackground", title: "Body Background Color", description: "Enable the teal-blue background for the body section.", type: "object", fields: [defineField({ name: "enabled", title: "Enable Background Color", type: "boolean", initialValue: false })] }),
     defineField({ name: "seo", title: "SEO Settings", type: "object", fields: [
       defineField({ name: "seoTitle", title: "SEO Title", type: "string" }),

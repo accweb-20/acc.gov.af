@@ -30,16 +30,9 @@
   --jb-font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
-.jb-root {
-  background-color: var(--jb-bg);
-  color: var(--jb-ink);
-}
-
 /* Font family switches with the active language, applied via data-lang
    on the same element that carries dir="ltr|rtl". */
-.jb-root[data-lang='en'] {
-  font-family: var(--jb-font-latin);
-}
+/* English uses the site font, so the jobs pages match the rest of the website. */
 .jb-root[data-lang='ps'],
 .jb-root[data-lang='fa'] {
   font-family: var(--jb-font-arabic);

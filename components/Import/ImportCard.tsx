@@ -1,275 +1,190 @@
 // components/Import/ImportCard.tsx
-"use client";
+// Product card with two layouts, switched by the List / Gallery buttons (see ViewScope in Motion.tsx):
+//   Gallery → image on top, title, short info, "Send Inquiry" (2 per row on phones)
+//   List    → image on the left, details on the right (highlights + key specs on larger screens)
+// The whole card opens the product; the "Send Inquiry" button jumps straight to the inquiry form.
+// Outside a ViewScope (e.g. "Related products") the card always uses the gallery layout.
 
-import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { urlFor } from "@/lib/sanity"; // <-- use your urlFor helper (same as Projects page)
+import { ArrowRight, Check, Images, ListChecks, Package, Send, Star } from "lucide-react";
+import { EYEBROW, IMG, IMPORTS_BASE, cardText, hasRich, imgUrl, type ProductCardData } from "@/lib/imports";
+import RichText from "./RichText";
 
-/** Portable Text small types */
-type PortableChild = { text?: string } | Record<string, unknown>;
-type PortableBlock = { _type?: string; children?: PortableChild[]; _key?: string } | Record<string, unknown>;
+// "list" layout = chosen List view, or the automatic default on screens ≥ 575px
+const ROOT =
+  "group/card relative flex h-full flex-col overflow-hidden border border-brand-line/10 bg-paper shadow-[0_2px_10px_rgba(2,88,123,0.07)] transition duration-300 ease-out hover:-translate-y-1 hover:border-brand-line/30 hover:shadow-[0_16px_36px_rgba(2,88,123,0.18)] " +
+  "group-data-[view=list]/view:flex-row sm:group-data-[view=auto]/view:flex-row";
+// Extra for the default (Imports page) card: a minimum height in list view
+const ROOT_FILL = " sm:group-data-[view=list]/view:min-h-[220px] sm:group-data-[view=auto]/view:min-h-[220px]";
 
-/** Import item shape (image is string or object) */
-export type ImportItem = {
-  _key?: string;
-  title?: string | null;
-  description?: PortableBlock[] | null;
-  image?: string | Record<string, unknown> | null;
-  order?: number | null;
-  slug?: string | null;
-  category?: unknown;
-};
+// Gallery view: square photo on top. List view: the photo fills the full height of the card
+// on the left (object-cover), so there is no empty space above or below it.
+const MEDIA =
+  "relative aspect-square w-full shrink-0 overflow-hidden border-b border-brand-line/10 bg-paper " +
+  "group-data-[view=list]/view:aspect-auto group-data-[view=list]/view:min-h-[120px] group-data-[view=list]/view:w-[120px] group-data-[view=list]/view:self-stretch group-data-[view=list]/view:border-b-0 group-data-[view=list]/view:border-r " +
+  "sm:group-data-[view=list]/view:w-[220px] md:group-data-[view=list]/view:w-[250px] " +
+  "sm:group-data-[view=auto]/view:aspect-auto sm:group-data-[view=auto]/view:w-[220px] sm:group-data-[view=auto]/view:self-stretch sm:group-data-[view=auto]/view:border-b-0 sm:group-data-[view=auto]/view:border-r md:group-data-[view=auto]/view:w-[250px]";
 
-/* ---------- helpers similar to your projects code ---------- */
+const BODY =
+  "flex min-w-0 flex-1 flex-col p-3 sm:p-4 sm:group-data-[view=list]/view:p-6 sm:group-data-[view=auto]/view:p-6";
 
-type UrlForReturn = {
-  width: (n: number) => {
-    auto: (s: string) => {
-      url: () => string;
-    };
-  };
-};
-type UrlForFn = (val: unknown) => UrlForReturn;
+const TITLE =
+  "line-clamp-2 text-[14px] font-semibold leading-snug text-ink transition-colors duration-300 group-hover/card:text-brand-fg sm:text-[16px] sm:group-data-[view=list]/view:text-[19px] sm:group-data-[view=auto]/view:text-[19px]";
 
-function makeImageUrlFromSanity(val: unknown, width?: number): string | null {
-  if (!val) return null;
-  if (typeof val === "string") return val;
-  if (typeof val === "object") {
-    try {
-      const urlForFn = urlFor as unknown as UrlForFn;
-      const w = typeof width === "number" && width > 0 ? width : 1200;
-      const u = urlForFn(val).width(w).auto("format").url();
-      if (typeof u === "string") return u;
-    } catch {
-      // fall back
-    }
-    const rec = val as Record<string, unknown>;
-    if (rec && typeof rec.url === "string") return rec.url;
-  }
-  return null;
-}
+// Only in the list layout on screens ≥ 575px
+const LIST_ONLY = "hidden sm:group-data-[view=list]/view:block sm:group-data-[view=auto]/view:block";
 
-/* Small helper to extract a short text excerpt from portable text description */
-function excerptFromDescription(desc?: PortableBlock[] | null, maxLength = 140): string {
-  if (!Array.isArray(desc)) return "";
-  // find first block with children text
-  const first = desc.find((b) => !!b && typeof b === "object" && (b as any)._type === "block" && Array.isArray((b as any).children));
-  if (!first) return "";
-  const children = ((first as PortableBlock).children ?? []) as PortableChild[];
-  const text = children.map((c) => (typeof (c as PortableChild).text === "string" ? (c as PortableChild).text : "")).join(" ");
-  const trimmed = text.replace(/\s+/g, " ").trim();
-  if (trimmed.length <= maxLength) return trimmed;
-  return trimmed.slice(0, maxLength).trim() + "...";
-}
+const DETAILS_LINK =
+  "hidden items-center gap-1.5 text-[14px] font-semibold text-brand-fg sm:group-data-[view=list]/view:inline-flex sm:group-data-[view=auto]/view:inline-flex";
 
-/* Two line title helper */
-function TwoLineTitle({ text }: { text?: string | null }) {
-  if (!text) {
-    return (
-      <>
-        &nbsp;
-        <br />
-        &nbsp;
-      </>
-    );
-  }
-  const words = text.trim().split(/\s+/);
-  if (words.length <= 1) {
-    return (
-      <>
-        {words[0]}
-        <br />
-        <span aria-hidden="true">&nbsp;</span>
-      </>
-    );
-  }
-  const half = Math.ceil(words.length / 2);
-  const first = words.slice(0, half).join(" ");
-  const second = words.slice(half).join(" ");
-  return (
-    <>
-      {first}
-      <br />
-      {second}
-    </>
-  );
-}
+const INQUIRY =
+  "relative z-10 inline-flex w-full shrink-0 items-center justify-center gap-1.5 whitespace-nowrap bg-[#F4BA00] px-3 py-2 text-[13px] font-bold text-[#1A1A1A] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(244,186,0,0.35)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-fg " +
+  "group-data-[view=list]/view:w-auto sm:group-data-[view=auto]/view:w-auto";
 
-/* ---------------- component ---------------- */
-
-export default function ImportCard({ item }: { item: ImportItem }) {
-  const CARD_MAX = 360;
-  const OVERLAP = 26;
-  const LABEL_COLOR = "#02587B";
-
-  const wrapperRef = useRef<HTMLDivElement | null>(null);
-  const imgBoxRef = useRef<HTMLDivElement | null>(null);
-
-  // the src we pass to next/image
-  const [imgSrc, setImgSrc] = useState<string | null>(() => {
-    return makeImageUrlFromSanity(item.image, 1200);
-  });
-
-  // measure & request DPR-aware image URL (like Projects page)
-  useEffect(() => {
-    if (!imgBoxRef.current && wrapperRef.current) imgBoxRef.current = wrapperRef.current;
-
-    let mounted = true;
-    const HOVER_SCALE = 1.12; // match card hover scale margin
-
-    function update() {
-      const el = imgBoxRef.current;
-      if (!el) return;
-      const cssWidth = Math.max(1, Math.floor(el.clientWidth)); // CSS px width of container
-      const dpr = typeof window !== "undefined" ? Math.max(1, window.devicePixelRatio || 1) : 1;
-      const targetPx = Math.round(cssWidth * dpr * HOVER_SCALE);
-      const url = makeImageUrlFromSanity(item.image, targetPx);
-      if (mounted && url && url !== imgSrc) {
-        setImgSrc(url);
-      }
-    }
-
-    update();
-
-    let ro: ResizeObserver | undefined;
-    if (typeof ResizeObserver !== "undefined") {
-      ro = new ResizeObserver(() => update());
-      if (imgBoxRef.current) ro.observe(imgBoxRef.current);
-    } else {
-      const onResize = () => update();
-      window.addEventListener("resize", onResize);
-      return () => {
-        mounted = false;
-        window.removeEventListener("resize", onResize);
-        if (ro && imgBoxRef.current) ro.unobserve(imgBoxRef.current);
-      };
-    }
-
-    return () => {
-      mounted = false;
-      try {
-        if (ro && imgBoxRef.current) ro.unobserve(imgBoxRef.current);
-      } catch {
-        // ignore
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [item.image]);
-
-  const slug = item.slug ?? "";
-  const href = slug ? `/imports/${slug}` : "#";
-
-  const IMG_H = 220; // match your Projects card height
-
-  // create excerpt once (small and safe)
-  const descriptionExcerpt = excerptFromDescription(item.description, 140);
+export default function ImportCard({
+  product,
+  categorySlug,
+  base = IMPORTS_BASE,
+  priority = false,
+  framed = false,
+}: {
+  product: ProductCardData;
+  /** category pages: no minimum card height in list view */
+  framed?: boolean;
+  categorySlug?: string;
+  /** section address: /services/imports, /services/exports or /services/sales */
+  base?: string;
+  /** true for the first cards on a page (loads the image immediately) */
+  priority?: boolean;
+}) {
+  const cat = categorySlug ?? product.category?.slug ?? "";
+  const href = product.slug && cat ? `${base}/${cat}/${product.slug}` : base;
+  const title = product.title ?? "Untitled product";
+  // Square crop (follows the Sanity hotspot) so the photo always fills its box
+  const src = imgUrl(product.image, IMG.card);
+  const text = cardText(product);
+  const highlights = (product.highlights ?? []).filter(Boolean).slice(0, 3);
+  const specs = (product.specs ?? []).filter((s) => s?.label && s?.value).slice(0, 4);
+  const hasDetails = !!text || highlights.length > 0 || specs.length > 0;
+  const imageCount = product.imageCount ?? 0;
+  const firstSpec = specs[0];
 
   return (
-    <article aria-labelledby={`import-${item._key ?? slug}-title`} className="flex justify-center w-full text-[#1A1A1A]">
-      <div
-        ref={wrapperRef}
-        className="group w-full max-w-[360px] relative flex flex-col items-start no-radius"
-        style={{ maxWidth: `${CARD_MAX}px`, borderRadius: 0, overflow: "visible", boxSizing: "border-box" }}
-      >
-        {/* image container (fixed height like your ProjectCard) */}
-        <div
-          ref={imgBoxRef}
-          className="relative z-20 mx-auto overflow-hidden transition-transform duration-300 ease-out group-hover:-translate-y-1 group-hover:scale-[1.02]"
-          style={{
-            width: "88%",
-            height: IMG_H,
-            transform: `translateY(${OVERLAP}px)`,
-            background: "#f5f5f5",
-            borderRadius: 0,
-            boxShadow: "0 -1px 4px rgba(0,0,0,0.2), 1px 0 4px rgba(0,0,0,0.2), -1px 0 4px rgba(0,0,0,0.2)",
-            position: "relative",
-          }}
-        >
-          {imgSrc ? (
-            <Image
-              src={imgSrc}
-              alt={item.title ?? "Import image"}
-              fill
-              style={{ objectFit: "cover" }}
-              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
-              draggable={false}
-              priority={false}
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center text-gray-400 bg-transparent">No image</div>
-          )}
-        </div>
+    <article className={framed ? ROOT : ROOT + ROOT_FILL}>
+      {/* Accent line that grows on hover */}
+      <span className="absolute left-0 top-0 z-10 h-[3px] w-0 bg-[#F4BA00] transition-all duration-500 group-hover/card:w-full" />
 
-        {/* label box */}
-        <div
-          className="relative z-10 pt-6 text-[#F5F5F5] w-full"
-          style={{
-            height: "auto",
-            marginTop: -OVERLAP,
-            padding: "60px 18px 14px 18px",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-            clipPath: "polygon(0 0, 100% 0%, 100% 100%, 0% 100%)",
-            background: LABEL_COLOR,
-            borderRadius: 0,
-          }}
-        >
-          <div>
-            <h3
-              id={`import-${item._key ?? slug}-title`}
-              className="font-getronde"
-              style={{
-                fontSize: 36,
-                lineHeight: 1.02,
-                margin: 0,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                minHeight: 36 * 2 * 1.02,
-              }}
-            >
-              <TwoLineTitle text={item.title ?? "Untitled"} />
-            </h3>
-
-            {/* replaced subtitle with description excerpt */}
-            <div
-              className="font-rubik pb-2"
-              style={{
-                fontSize: 13,
-                lineHeight: 1.2,
-                marginTop: 8,
-                opacity: 0.95,
-                color: "rgba(255,255,255,0.95)",
-              }}
-            >
-              {descriptionExcerpt || "\u00A0"}
-            </div>
+      {/* ---------- Image ---------- */}
+      <div className={MEDIA}>
+        {src ? (
+          <Image
+            src={src}
+            alt={product.image?.alt || title}
+            fill
+            priority={priority}
+            sizes="(max-width: 574px) 50vw, (max-width: 991px) 260px, 260px"
+            className={`object-cover transition-transform duration-700 ease-out group-hover/card:scale-[1.04]`}
+          />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-2 bg-tint text-brand-fg/45">
+            <Package size={40} strokeWidth={1.3} />
+            <span className="hidden text-[11px] font-bold uppercase tracking-[0.14em] text-ink/45 sm:block">Image coming soon</span>
           </div>
+        )}
 
-          <div className="w-full flex items-center justify-between" style={{ gap: 12 }}>
-            <button
-              className="inline-flex items-center justify-center no-underline"
-              aria-label={`Read more about ${item.title ?? "import item"}`}
-              style={{
-                padding: "8px 14px",
-                backgroundColor: "#F4BA00",
-                clipPath: "polygon(0 0, 100% 20%, 100% 100%, 0% 100%)",
-                color: "#1A1A1A",
-                fontWeight: 800,
-                fontFamily: "Rubik, system-ui, -apple-system, 'Segoe UI', Roboto, Arial",
-                textDecoration: "none",
-                borderRadius: 0,
-                fontSize: 14,
-              }}
-            >
-              YOU CAN SUGGEST
-            </button>
+        {product.featured && (
+          <span
+            className="absolute left-0 top-2 inline-flex items-center gap-1 bg-[#F4BA00] py-0.5 pl-2 pr-3 text-[10px] font-bold uppercase tracking-wide text-[#1A1A1A] sm:top-3 sm:py-1 sm:pl-3 sm:pr-4 sm:text-[11px]"
+            style={{ clipPath: "polygon(0 0, 100% 0, 88% 100%, 0 100%)" }}
+          >
+            <Star size={11} fill="#1A1A1A" /> Featured
+          </span>
+        )}
 
-            <span className="text-xs text-white/90" style={{ opacity: 0.95 }}>
-              
-            </span>
+        {imageCount > 1 && (
+          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 bg-[#1A1A1A]/75 px-1.5 py-0.5 text-[11px] font-medium text-white">
+            <Images size={12} /> {imageCount}
+          </span>
+        )}
+      </div>
+
+      {/* ---------- Details ---------- */}
+      <div className={BODY}>
+        {product.category?.title && !categorySlug && (
+          <span className={`mb-1 hidden truncate sm:block ${EYEBROW}`}>{product.category.title}</span>
+        )}
+
+        <h3 className={TITLE}>
+          {/* Stretched link: the whole card is clickable */}
+          <Link
+            href={href}
+            className="after:absolute after:inset-0 after:z-[1] focus-visible:outline-none focus-visible:after:outline-2 focus-visible:after:outline-offset-2 focus-visible:after:outline-brand-fg"
+          >
+            {title}
+          </Link>
+        </h3>
+        <span className="mt-2 hidden h-[3px] w-10 shrink-0 bg-[#F4BA00] transition-all duration-500 group-hover/card:w-16 sm:block" />
+
+        {/* Phones: one key fact under the title */}
+        {firstSpec && (
+          <p className="mt-1 truncate text-[12px] text-ink/55 sm:hidden">
+            {firstSpec.label}: <span className="font-medium text-ink/80">{firstSpec.value}</span>
+          </p>
+        )}
+
+        {text && (
+          <div className="mt-2 hidden sm:block">
+            <p className="line-clamp-2 text-[14px] leading-[1.6] text-ink/65 sm:group-data-[view=list]/view:text-[15px]">
+              {hasRich(product.shortDescription) ? <RichText value={product.shortDescription} inline noLinks /> : text}
+            </p>
           </div>
+        )}
+
+        {highlights.length > 0 && (
+          <div className={`mt-3 ${LIST_ONLY}`}>
+            <ul className="flex flex-wrap gap-2" aria-label="Highlights">
+              {highlights.map((h, i) => (
+                <li
+                  key={i}
+                  className="inline-flex max-w-full items-center gap-1 bg-tint px-2.5 py-1 text-[13px] font-medium leading-[1.4] text-brand-fg transition-colors duration-300 group-hover/card:bg-tint-strong"
+                >
+                  <Check size={12} strokeWidth={3} className="shrink-0" />
+                  <span className="truncate">{h}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {specs.length > 0 && (
+          <div className={`mt-3 ${LIST_ONLY}`}>
+            <dl className="grid grid-cols-2 gap-2 md:grid-cols-4">
+              {specs.map((s, i) => (
+                <div key={s._key ?? i} className="min-w-0 border-l-2 border-[#F4BA00] bg-smoke px-2.5 py-1.5">
+                  <dt className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-ink/45">{s.label}</dt>
+                  <dd className="truncate text-[14px] font-medium leading-[1.5] text-ink">{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
+
+        {!hasDetails && (
+          <p className="mt-2 hidden items-start gap-2 text-[13.5px] leading-relaxed text-ink/55 sm:flex">
+            <ListChecks size={16} className="mt-0.5 shrink-0 text-brand-fg/50" />
+            Contact our sales team for specifications, availability and pricing.
+          </p>
+        )}
+
+        <div className="mt-auto flex items-center justify-between gap-3 pt-3 sm:pt-4">
+          <span className={DETAILS_LINK} aria-hidden="true">
+            View Details
+            <ArrowRight size={16} className="transition-transform duration-300 group-hover/card:translate-x-1" />
+          </span>
+          <Link href={`${href}#inquiry`} className={INQUIRY} aria-label={`Send an inquiry about ${title}`}>
+            <Send size={14} className="shrink-0" /> Send Inquiry
+          </Link>
         </div>
       </div>
     </article>

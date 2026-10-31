@@ -1,16 +1,12 @@
 // components/Header/index.tsx
+// Site header: logo + name, main menu with drop-down sub menus, "Contact Us" button,
+// and a full-screen menu on phones. All menu items come from the Sanity "header" document.
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { sanityClient, getSanityImageUrl } from "../../sanity/lib/client";
-
-/* Theme colors */
-const BG = "#02587b";
-const FG = "#ffffff";
-const HOVER_BG = "rgba(255,255,255,0.15)";
+import { ArrowRight, ChevronDown, Mail, Menu, Moon, Phone, Sun, X } from "lucide-react";
 
 type SanityLink = {
   linkType?: "internal" | "external";
@@ -32,7 +28,7 @@ type NavItem = {
   submenu?: { introText?: string | null; items?: SubmenuItem[] } | null;
 };
 
-type HeaderDoc = {
+export type HeaderDoc = {
   title?: string;
   logo?: { asset?: { _ref?: string; _id?: string; url?: string } } | null;
   logoAlt?: string | null;
@@ -40,490 +36,228 @@ type HeaderDoc = {
   navItems?: NavItem[] | null;
 };
 
-const LANGS = [
-  { value: "en", label: "English" },
-  { value: "ps", label: "Pashto" },
-  { value: "fa", label: "Dari" },
-];
+/** Pages that have no slug field get a fixed address. */
+const TYPE_PATHS: Record<string, string> = {
+  home: "/",
+  servicesPage: "/services",
+  import: "/services/imports",
+  export: "/services/exports",
+  sales: "/services/sales",
+  tendersPage: "/tenders",
+  jobsPage: "/jobs",
+};
 
-export default function Header(): JSX.Element {
-  const [data, setData] = useState<HeaderDoc | null>(null);
-  const [navbarOpen, setNavbarOpen] = useState(false);
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+const CONTAINER = "mx-auto w-[90%] max-w-[493px] md:w-[93%] md:max-w-[924px] lg:w-[90%] lg:max-w-[1140px]"; // same width as the pages
 
-  const [lang, setLang] = useState<string>("en");
+/** "ABOUT US" → "About Us" */
+const nice = (t?: string) => (t ?? "").toLowerCase().replace(/(^|\s)\S/g, (c) => c.toUpperCase());
 
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = localStorage.getItem("site_lang");
-    if (stored && stored !== lang) setLang(stored);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+function resolveLink(ln?: SanityLink | null) {
+  if (!ln) return { href: "", external: false, target: undefined as string | undefined };
+  const target = ln.openInNewTab ? "_blank" : undefined;
+  if (ln.linkType === "external") return { href: ln.externalUrl ?? "", external: true, target };
+  const ref = ln.internalRef;
+  const path = ref?.slug ? `/${String(ref.slug).replace(/^\/+/, "")}` : ref?._type ? TYPE_PATHS[ref._type] : undefined;
+  return { href: path ?? "", external: false, target };
+}
 
-  useEffect(() => {
-    if (typeof window !== "undefined") localStorage.setItem("site_lang", lang);
-  }, [lang]);
+/** A link that works for both internal pages and external websites. */
+function NavLink({ ln, className, children, onClick }: { ln: ReturnType<typeof resolveLink>; className?: string; children: React.ReactNode; onClick?: () => void }) {
+  if (ln.external)
+    return (
+      <a href={ln.href} target={ln.target} rel="noopener noreferrer" className={className} onClick={onClick}>
+        {children}
+      </a>
+    );
+  return (
+    <Link href={ln.href || "/"} target={ln.target} className={className} onClick={onClick}>
+      {children}
+    </Link>
+  );
+}
 
-  const [langOpen, setLangOpen] = useState(false);
-  const pathname = usePathname();
-  const mobileRef = useRef<HTMLDivElement | null>(null);
-  const langRefMobile = useRef<HTMLDivElement | null>(null);
-  const langRefDesktop = useRef<HTMLDivElement | null>(null);
+/** Light / dark mode: the choice is saved in the browser (see the script in app/(frontend)/layout.tsx). */
+function toggleTheme() {
+  const dark = document.documentElement.classList.toggle("dark");
+  try {
+    localStorage.setItem("theme", dark ? "dark" : "light");
+  } catch {}
+}
 
-  useEffect(() => {
-    setNavbarOpen(false);
+function ThemeButton() {
+  return (
+    <button
+      type="button"
+      onClick={toggleTheme}
+      aria-label="Switch between light and dark mode"
+      title="Light / dark mode"
+      className="grid h-11 w-11 place-items-center text-white/85 transition hover:bg-white/10 hover:text-[#F4BA00]"
+    >
+      <Moon size={20} className="dark:hidden" />
+      <Sun size={20} className="hidden dark:block" />
+    </button>
+  );
+}
+
+export default function Header({ data: raw, contact: info }: { data?: HeaderDoc | null; contact?: { email?: string | null; phones?: string[] | null } | null }) {
+  const email = info?.email || "info@acc.gov.af";
+  const phone = info?.phones?.[0] || "0093 74 5700 015";
+  const items = (raw?.navItems ?? []).slice().sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  const pathname = usePathname() ?? "/";
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [openIndex, setOpenIndex] = useState<number | null>(null); // opened by click / keyboard
+  const [hoverIndex, setHoverIndex] = useState<number | null>(null); // opened by the mouse
+  const [scrolled, setScrolled] = useState(false);
+
+  // close menus when the page changes
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
+    setMobileOpen(false);
     setOpenIndex(null);
-    setLangOpen(false);
-  }, [pathname]);
+    setHoverIndex(null);
+  }
 
+  // darker header with a shadow after scrolling
   useEffect(() => {
-    let mounted = true;
-
-    async function fetchHeader() {
-      try {
-        const q = `*[_type == "header"][0]{
-          title,
-          logo{asset->{_id, url}},
-          logoAlt,
-          logoLink,
-          navItems[]{
-            order,
-            title,
-            showSubmenu,
-            link{ linkType, internalRef-> { _id, _type, title, "slug": slug.current }, externalUrl, openInNewTab },
-            submenu{ introText, items[]{ label, link{ linkType, internalRef->{ _id, _type, title, "slug": slug.current }, externalUrl, openInNewTab } } }
-          }
-        }`;
-
-        const res = await sanityClient.fetch(q);
-        if (!mounted) return;
-
-        if (res?.navItems?.length) {
-          res.navItems = res.navItems
-            .slice()
-            .sort((a: NavItem, b: NavItem) => (a.order ?? 0) - (b.order ?? 0));
-        }
-
-        setData(res || null);
-      } catch (err) {
-        // eslint-disable-next-line no-console
-        console.error("Failed to fetch header:", err);
-      }
-    }
-
-    fetchHeader();
-
-    return () => {
-      mounted = false;
-    };
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // no page scrolling behind the phone menu
   useEffect(() => {
-    function onDocClick(e: MouseEvent) {
-      const target = e.target as Node;
-
-      const el = mobileRef.current;
-      if (navbarOpen && el && !el.contains(target)) {
-        setNavbarOpen(false);
-        setOpenIndex(null);
-      }
-
-      const d = langRefDesktop.current;
-      const m = langRefMobile.current;
-      if (langOpen && !(d?.contains(target) || m?.contains(target))) {
-        setLangOpen(false);
-      }
-    }
-
-    document.addEventListener("click", onDocClick);
-    return () => document.removeEventListener("click", onDocClick);
-  }, [navbarOpen, langOpen]);
-
-  const toggleSub = (i: number) => setOpenIndex((prev) => (prev === i ? null : i));
-
-  const resolveLink = (ln?: SanityLink | null) => {
-    if (!ln) return { href: "/", external: false, target: "" };
-
-    if (ln.linkType === "external") {
-      return {
-        href: ln.externalUrl ?? "#",
-        external: true,
-        target: ln.openInNewTab ? "_blank" : "",
-      };
-    }
-
-    if (ln.internalRef && (ln.internalRef as any).slug) {
-      return {
-        href: `/${(ln.internalRef as any).slug}`,
-        external: false,
-        target: "",
-      };
-    }
-
-    return {
-      href: ln.externalUrl ?? "/",
-      external: false,
-      target: ln.openInNewTab ? "_blank" : "",
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
     };
-  };
+  }, [mobileOpen]);
 
-  const logoUrl = getSanityImageUrl(data?.logo ?? null, { width: 40, height: 40 });
+  // Escape closes any open menu
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpenIndex(null);
+        setMobileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, []);
+
+  const isActive = (href: string) => !!href && (href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/"));
+  const itemActive = (item: NavItem) =>
+    isActive(resolveLink(item.link).href) || (item.submenu?.items ?? []).some((s) => isActive(resolveLink(s.link).href));
+  const isContact = (item: NavItem) => item.link?.internalRef?._type === "contactUs";
+
+  const logoUrl = raw?.logo?.asset?.url ?? null;
+  const name = raw?.logoAlt || "Afghan Cart";
+  const menu = items.filter((i) => !isContact(i));
+  const contact = items.find(isContact);
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 w-full shadow-sm" style={{ background: BG, color: FG }}>
-        <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[493px] md:max-w-[924px] lg:max-w-[1140px]">
-          <div className="flex h-16 items-center justify-between">
-            {/* Logo + mobile language area */}
-            <div className="flex h-full items-center gap-4">
-              <Link href={data?.logoLink ?? "/"} className="inline-flex h-full items-center">
-                {data ? (
-                  logoUrl ? (
-                    <Image
-                      src={logoUrl}
-                      alt={data?.logoAlt ?? data?.title ?? "logo"}
-                      width={47}
-                      height={40}
-                      unoptimized
-                    />
-                  ) : (
-                    <span style={{ color: FG, fontWeight: 700 }}>{data?.title ?? "Site"}</span>
-                  )
-                ) : (
-                  <div className="h-14 w-12.5 animate-pulse rounded bg-white/20 mt-0.5" />
-                )}
-              </Link>
-
-              {/* Kept hidden on small screens unless you want to show it */}
-              <div className="hidden" ref={langRefMobile}>
-                <div className="relative inline-block">
-                  <button
-                    type="button"
-                    onClick={() => setLangOpen((s) => !s)}
-                    aria-haspopup="listbox"
-                    aria-expanded={langOpen}
-                    className="flex items-center rounded border px-2 py-1 text-sm"
-                    style={{ borderColor: "rgba(255,255,255,0.4)", color: FG }}
-                  >
-                    {LANGS.find((l) => l.value === lang)?.label ?? "Language"}
-                    <span className="ml-2" aria-hidden>
-                      <svg width="25" height="24" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                          d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </span>
-                  </button>
-
-                  {langOpen && (
-                    <ul
-                      role="listbox"
-                      tabIndex={-1}
-                      className="absolute left-0 z-50 mt-1 w-36 overflow-hidden rounded shadow-lg"
-                      style={{ background: BG, border: "1px solid rgba(255,255,255,0.2)" }}
-                    >
-                      {LANGS.map((l) => (
-                        <li
-                          key={l.value}
-                          role="option"
-                          onClick={() => {
-                            setLang(l.value);
-                            setLangOpen(false);
-                          }}
-                          onKeyDown={(e) => e.key === "Enter" && (setLang(l.value), setLangOpen(false))}
-                          className="cursor-pointer px-3 py-2 text-sm"
-                          style={{ color: FG }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = HOVER_BG;
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = "";
-                          }}
-                        >
-                          {l.label}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Desktop nav */}
-            <nav className="hidden h-full lg:block">
-              {data ? (
-                <ul className="flex h-full items-center space-x-6">
-                  {data.navItems?.map((item, i) => {
-                    const ln = resolveLink(item.link);
-
-                    return (
-                      <li key={i} className="relative h-full">
-                        {item.showSubmenu ? (
-                          <div className="group h-full">
-                            <button
-                              onClick={() => toggleSub(i)}
-                              className="flex h-full items-center gap-2 px-1 text-base font-medium"
-                              aria-expanded={openIndex === i}
-                              style={{ background: "transparent" }}
-                            >
-                              <span className="nav-link inline-block">{item.title}</span>
-                              <span>
-                                <svg width="25" height="24" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
-                                  <path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                                    fill="currentColor"
-                                  />
-                                </svg>
-                              </span>
-                            </button>
-
-                            <div
-                              className="absolute left-0 w-56 opacity-0 invisible shadow-lg transition-all group-hover:visible group-hover:opacity-100"
-                              style={{
-                                background: BG,
-                                boxShadow:
-                                  "0 6px 6px -4px rgba(0,0,0,0.25), 4px 0 6px -4px rgba(0,0,0,0.25), -4px 0 6px -4px rgba(0,0,0,0.25)",
-                              }}
-                            >
-                              <div className="px-4">
-                                {item.submenu?.introText && (
-                                  <div className="mb-2 text-sm" style={{ color: FG }}>
-                                    {item.submenu.introText}
-                                  </div>
-                                )}
-                                <ul>
-                                  {item.submenu?.items?.map((si, k) => {
-                                    const s = resolveLink(si.link);
-                                    return (
-                                      <li key={k} className="py-1">
-                                        {s.external ? (
-                                          <a
-                                            href={s.href}
-                                            target={s.target}
-                                            rel="noopener noreferrer"
-                                            className="inline-block py-2 text-sm"
-                                          >
-                                            {si.label}
-                                          </a>
-                                        ) : (
-                                          <Link
-                                            href={s.href}
-                                            className={
-                                              "relative inline-block py-2 text-sm " +
-                                              "after:absolute after:bottom-2 after:left-0 after:right-0 " +
-                                              "after:h-[2px] after:origin-center after:scale-x-0 after:transform after:bg-white " +
-                                              "after:transition-transform after:duration-300 after:content-[''] after:pointer-events-none " +
-                                              "hover:after:scale-x-100"
-                                            }
-                                          >
-                                            {si.label}
-                                          </Link>
-                                        )}
-                                      </li>
-                                    );
-                                  })}
-                                </ul>
-                              </div>
-                            </div>
-                          </div>
-                        ) : ln.external ? (
-                          <a
-                            href={ln.href}
-                            target={ln.target}
-                            rel="noopener noreferrer"
-                            className="flex h-full items-center px-1 text-base font-medium"
-                          >
-                            <span className="nav-link inline-block">{item.title}</span>
-                          </a>
-                        ) : (
-                          <Link href={ln.href} className="flex h-full items-center px-1 text-base font-medium">
-                            <span className="nav-link inline-block">{item.title}</span>
-                          </Link>
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              ) : (
-                <div className="mt-6 flex items-center gap-4">
-                  <div className="h-4 w-24 animate-pulse rounded bg-white/20" />
-                  <div className="h-4 w-24 animate-pulse rounded bg-white/20" />
-                  <div className="h-4 w-24 animate-pulse rounded bg-white/20" />
-                  <div className="h-4 w-24 animate-pulse rounded bg-white/20" />
-                  <div className="h-4 w-24 animate-pulse rounded bg-white/20" />
-                </div>
-              )}
-            </nav>
-
-            {/* Right side: desktop language select and mobile toggle */}
-            <div className="flex items-center gap-3">
-              <div className="hidden" ref={langRefDesktop}>
-                <div className="relative inline-block">
-                  <button
-                    type="button"
-                    onClick={() => setLangOpen((s) => !s)}
-                    aria-haspopup="listbox"
-                    aria-expanded={langOpen}
-                    className="flex items-center rounded border px-2 py-1 text-sm"
-                    style={{ borderColor: "rgba(255,255,255,0.4)", color: FG }}
-                  >
-                    {LANGS.find((l) => l.value === lang)?.label ?? "Language"}
-                    <span className="ml-2" aria-hidden>
-                      <svg width="15" height="14" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                          fillRule="evenodd"
-                          clipRule="evenodd"
-                          d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                          fill="currentColor"
-                        />
-                      </svg>
-                    </span>
-                  </button>
-
-                  {langOpen && (
-                    <ul
-                      role="listbox"
-                      tabIndex={-1}
-                      className="absolute right-0 z-50 mt-1 w-36 overflow-hidden rounded shadow-lg"
-                      style={{ background: BG, border: "1px solid rgba(255,255,255,0.2)" }}
-                    >
-                      {LANGS.map((l) => (
-                        <li
-                          key={l.value}
-                          role="option"
-                          onClick={() => {
-                            setLang(l.value);
-                            setLangOpen(false);
-                          }}
-                          onKeyDown={(e) => e.key === "Enter" && (setLang(l.value), setLangOpen(false))}
-                          className="cursor-pointer px-3 py-2 text-sm"
-                          style={{ color: FG }}
-                          onMouseEnter={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = HOVER_BG;
-                          }}
-                          onMouseLeave={(e) => {
-                            (e.currentTarget as HTMLElement).style.background = "";
-                          }}
-                        >
-                          {l.label}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-
-              <button
-                aria-label="Toggle menu"
-                onClick={() => setNavbarOpen((s) => !s)}
-                className="p-2 lg:hidden"
-              >
-                <span className="relative block h-5 w-7">
-                  <span
-                    className={`absolute left-0 top-0 block h-[2px] w-full transition-transform ${
-                      navbarOpen ? "translate-y-[10px] rotate-45" : ""
-                    }`}
-                    style={{ background: FG }}
-                  />
-                  <span
-                    className={`absolute left-0 top-[8px] block h-[2px] w-full transition-opacity ${
-                      navbarOpen ? "opacity-0" : ""
-                    }`}
-                    style={{ background: FG }}
-                  />
-                  <span
-                    className={`absolute left-0 top-[16px] block h-[2px] w-full transition-transform ${
-                      navbarOpen ? "-translate-y-[10px] -rotate-45" : ""
-                    }`}
-                    style={{ background: FG }}
-                  />
-                </span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile menu: starts below the fixed header so the header stays visible */}
-      <div
-        ref={mobileRef}
-        className={`fixed left-0 right-0 top-16 z-40 transition-transform duration-300 ${
-          navbarOpen ? "translate-y-0" : "-translate-y-[calc(100vh-4rem)]"
+      <header
+        className={`fixed inset-x-0 top-0 z-50 h-16 border-b border-black/20 text-white transition-[background-color,box-shadow] duration-300 ${
+          scrolled || mobileOpen ? "bg-deep shadow-[0_10px_30px_rgba(0,0,0,0.3)]" : "bg-deep shadow-[0_6px_18px_rgba(0,0,0,0.28)]"
         }`}
       >
-        <div className="min-h-[calc(100vh-4rem)] w-full overflow-auto px-4 py-4" style={{ background: BG, color: FG }}>
-          <nav>
-            {data ? (
-              <ul className="flex flex-col">
-                {data.navItems?.map((item, i) => {
+        <div className={`${CONTAINER} flex h-full items-center justify-between gap-6`}>
+          {/* Logo + name */}
+          <Link href={raw?.logoLink ?? "/"} className="flex shrink-0 items-center gap-3" aria-label={`${name} – home`}>
+            {raw ? (
+              logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={logoUrl} alt={name} className="h-11 w-auto" />
+              ) : null
+            ) : (
+              <span className="h-11 w-10 animate-pulse bg-white/20" />
+            )}
+            <span className="leading-none lg:hidden xl:block">
+              <b className="block text-[17px] font-extrabold tracking-wide">{name.toUpperCase()}</b>
+              <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.28em] text-[#F4BA00]">Corporation</span>
+            </span>
+          </Link>
+
+          {/* Desktop menu */}
+          <nav aria-label="Main menu" className="hidden h-full lg:block">
+            {raw ? (
+              <ul className="flex h-full items-center">
+                {menu.map((item, i) => {
                   const ln = resolveLink(item.link);
-                  const isOpen = openIndex === i;
+                  const active = itemActive(item);
+                  const hasSub = !!item.showSubmenu && !!item.submenu?.items?.length;
+                  const label = (
+                    <span className={`relative py-2 after:absolute after:inset-x-0 after:-bottom-0.5 after:h-[3px] after:bg-[#F4BA00] after:transition-transform after:duration-300 ${active ? "after:scale-x-100" : "after:scale-x-0 group-hover:after:scale-x-100"}`}>
+                      {nice(item.title)}
+                    </span>
+                  );
+                  const linkCls = `flex h-full items-center whitespace-nowrap px-2.5 text-[15px] font-medium transition xl:px-3.5 ${active ? "text-white" : "text-white/85 hover:text-white"}`;
 
                   return (
-                    <li key={i} className="border-b border-white/20">
-                      <div className="flex items-center justify-between py-4">
-                        {item.showSubmenu ? (
-                          <button onClick={() => toggleSub(i)} className="flex-1 text-left">
-                            {item.title}
-                          </button>
-                        ) : ln.external ? (
-                          <a href={ln.href} target={ln.target} rel="noopener noreferrer" className="flex-1">
-                            {item.title}
-                          </a>
+                    <li
+                      key={i}
+                      className="group relative h-full"
+                      onMouseEnter={() => setHoverIndex(i)}
+                      onMouseLeave={() => {
+                        // cursor left the menu item and its sub menu: close it
+                        setHoverIndex(null);
+                        setOpenIndex(null);
+                      }}
+                    >
+                      <div className="flex h-full items-center">
+                        {ln.href ? (
+                          <NavLink ln={ln} className={linkCls}>
+                            {label}
+                          </NavLink>
                         ) : (
-                          <Link href={ln.href} className="flex-1">
-                            {item.title}
-                          </Link>
+                          <button type="button" onClick={() => setOpenIndex(openIndex === i ? null : i)} className={linkCls} aria-expanded={openIndex === i}>
+                            {label}
+                          </button>
                         )}
-
-                        {item.showSubmenu && (
+                        {hasSub && (
                           <button
-                            onClick={() => toggleSub(i)}
-                            aria-label="Toggle"
-                            className={`p-2 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                            type="button"
+                            onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                            aria-label={`Show ${nice(item.title)} menu`}
+                            aria-expanded={openIndex === i}
+                            className={`-ml-2 flex h-full items-center pr-2 text-white/70 transition hover:text-white ${ln.href ? "" : "hidden"}`}
                           >
-                            <svg width="20" height="20" viewBox="0 0 25 24" xmlns="http://www.w3.org/2000/svg">
-                              <path
-                                fillRule="evenodd"
-                                clipRule="evenodd"
-                                d="M6.29289 8.8427C6.68342 8.45217 7.31658 8.45217 7.70711 8.8427L12 13.1356L16.2929 8.8427C16.6834 8.45217 17.3166 8.45217 17.7071 8.8427C18.0976 9.23322 18.0976 9.86639 17.7071 10.2569L12 15.964L6.29289 10.2569C5.90237 9.86639 5.90237 9.23322 6.29289 8.8427Z"
-                                fill="currentColor"
-                              />
-                            </svg>
+                            <ChevronDown size={15} className={`transition ${hoverIndex === i || openIndex === i ? "rotate-180" : ""}`} />
                           </button>
                         )}
                       </div>
 
-                      {item.showSubmenu && (
-                        <div className={`overflow-hidden transition-[max-height] duration-300 ${isOpen ? "max-h-[1000px]" : "max-h-0"}`}>
-                          <div className="pb-4 pl-4 pr-6">
-                            {item.submenu?.introText && <div className="mb-2 text-sm">{item.submenu.introText}</div>}
-                            <ul className="flex flex-col">
+                      {hasSub && (
+                        <div
+                          className={`absolute left-0 top-full w-64 pt-0 transition duration-200 group-has-[:focus-visible]:visible group-has-[:focus-visible]:translate-y-0 group-has-[:focus-visible]:opacity-100 ${
+                            hoverIndex === i || openIndex === i ? "visible translate-y-0 opacity-100" : "invisible translate-y-2 opacity-0"
+                          }`}
+                        >
+                          <div className="border-t-[3px] border-[#F4BA00] bg-paper py-2 text-ink shadow-[0_24px_50px_rgba(1,52,74,0.22)]">
+                            {item.submenu?.introText && <p className="px-5 pb-2 pt-1 text-[13px] text-ink/60">{item.submenu.introText}</p>}
+                            <ul>
                               {item.submenu?.items?.map((si, k) => {
                                 const s = resolveLink(si.link);
-
+                                const on = isActive(s.href);
                                 return (
-                                  <li key={k} className="py-2">
-                                    {s.external ? (
-                                      <a
-                                        href={s.href}
-                                        target={s.target}
-                                        rel="noopener noreferrer"
-                                        className="block"
-                                        style={{ paddingLeft: 8 }}
-                                      >
-                                        {si.label}
-                                      </a>
-                                    ) : (
-                                      <Link href={s.href} className="block" style={{ paddingLeft: 8 }}>
-                                        {si.label}
-                                      </Link>
-                                    )}
+                                  <li key={k}>
+                                    <NavLink
+                                      ln={s}
+                                      onClick={() => {
+                                        // close the sub menu after choosing a page
+                                        setHoverIndex(null);
+                                        setOpenIndex(null);
+                                        (document.activeElement as HTMLElement | null)?.blur();
+                                      }}
+                                      className={`group/s flex items-center justify-between gap-3 px-5 py-2.5 text-[14px] font-medium transition ${
+                                        on ? "bg-brand/[0.07] text-brand-fg" : "hover:bg-mist hover:text-brand-fg"
+                                      }`}
+                                    >
+                                      {nice(si.label)}
+                                      <ArrowRight size={15} className={`text-[#F4BA00] transition ${on ? "" : "-translate-x-1 opacity-0 group-hover/s:translate-x-0 group-hover/s:opacity-100"}`} />
+                                    </NavLink>
                                   </li>
                                 );
                               })}
@@ -536,60 +270,112 @@ export default function Header(): JSX.Element {
                 })}
               </ul>
             ) : (
-              <div className="space-y-3">
-                <div className="h-4 w-3/4 animate-pulse rounded bg-white/20" />
-                <div className="h-4 w-1/2 animate-pulse rounded bg-white/20" />
-                <div className="h-4 w-2/3 animate-pulse rounded bg-white/20" />
-                <div className="h-4 w-2/3 animate-pulse rounded bg-white/20" />
-                <div className="h-4 w-2/3 animate-pulse rounded bg-white/20" />
+              <div className="flex h-full items-center gap-6">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <span key={i} className="h-3.5 w-20 animate-pulse bg-white/20" />
+                ))}
               </div>
             )}
           </nav>
+
+          <div className="flex items-center gap-2">
+            <ThemeButton />
+            {/* Contact button (the "Contact Us" menu item) */}
+            {contact && (
+              <NavLink
+                ln={resolveLink(contact.link)}
+                className="hidden items-center gap-2 whitespace-nowrap bg-[#F4BA00] px-5 py-2.5 text-[15px] font-bold text-[#1A1A1A] transition hover:bg-white lg:inline-flex"
+              >
+                {nice(contact.title)} <ArrowRight size={15} />
+              </NavLink>
+            )}
+
+            {/* Phone menu button */}
+            <button
+              type="button"
+              onClick={() => setMobileOpen((o) => !o)}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileOpen}
+              className="grid h-11 w-11 place-items-center transition hover:bg-white/10 lg:hidden"
+            >
+              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Phone menu (below the header) */}
+      <div
+        className={`fixed inset-x-0 bottom-0 top-16 z-40 flex flex-col overflow-y-auto bg-deep text-white transition duration-300 lg:hidden ${
+          mobileOpen ? "visible translate-y-0 opacity-100" : "invisible -translate-y-4 opacity-0"
+        }`}
+      >
+        <nav aria-label="Main menu" className={`${CONTAINER} flex-1 py-4`}>
+          <ul>
+            {items.map((item, i) => {
+              const ln = resolveLink(item.link);
+              const hasSub = !!item.showSubmenu && !!item.submenu?.items?.length;
+              const open = openIndex === i;
+              const active = itemActive(item);
+              return (
+                <li key={i} className="border-b border-white/10">
+                  <div className="flex items-center justify-between">
+                    {ln.href ? (
+                      <NavLink ln={ln} className={`flex-1 py-4 text-[16px] font-semibold ${active ? "text-[#F4BA00]" : ""}`}>
+                        {nice(item.title)}
+                      </NavLink>
+                    ) : (
+                      <button type="button" onClick={() => setOpenIndex(open ? null : i)} className={`flex-1 py-4 text-left text-[16px] font-semibold ${active ? "text-[#F4BA00]" : ""}`}>
+                        {nice(item.title)}
+                      </button>
+                    )}
+                    {hasSub && (
+                      <button
+                        type="button"
+                        onClick={() => setOpenIndex(open ? null : i)}
+                        aria-label={`Show ${nice(item.title)} menu`}
+                        aria-expanded={open}
+                        className="grid h-11 w-11 place-items-center bg-white/5"
+                      >
+                        <ChevronDown size={18} className={`transition ${open ? "rotate-180" : ""}`} />
+                      </button>
+                    )}
+                  </div>
+                  {hasSub && (
+                    <div className={`grid transition-[grid-template-rows] duration-300 ${open ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
+                      <ul className="overflow-hidden">
+                        {item.submenu?.items?.map((si, k) => {
+                          const s = resolveLink(si.link);
+                          return (
+                            <li key={k}>
+                              <NavLink ln={s} className={`flex items-center gap-3 py-2.5 pl-4 text-[15px] ${isActive(s.href) ? "text-[#F4BA00]" : "text-white/80"}`}>
+                                <span className="h-1.5 w-1.5 bg-[#F4BA00]" />
+                                {nice(si.label)}
+                              </NavLink>
+                            </li>
+                          );
+                        })}
+                        <li className="h-3" />
+                      </ul>
+                    </div>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        <div className="bg-deep py-6">
+          <div className={`${CONTAINER} flex flex-col gap-3 text-[15px]`}>
+            <a href={`mailto:${email}`} className="flex items-center gap-3 text-white/85">
+              <Mail size={17} className="text-[#F4BA00]" /> {email}
+            </a>
+            <a href={`tel:${phone.replace(/[^\d+]/g, "")}`} className="flex items-center gap-3 text-white/85">
+              <Phone size={17} className="text-[#F4BA00]" /> {phone}
+            </a>
+          </div>
         </div>
       </div>
-
-      <style jsx>{`
-        a,
-        button {
-          color: #ffffff; 
-        }
-
-        a:hover,
-        button:hover {
-          color: #ffffff;
-        }
-
-        .nav-link {
-          position: relative;
-          display: inline-block;
-        }
-
-        .nav-link::after {
-          content: "";
-          position: absolute;
-          left: 0;
-          right: 0;
-          bottom: -4px;
-          height: 4px;
-          background: #ffffff;
-          border-radius: 0 !important;
-          transform-origin: center;
-          transform: scaleX(0);
-          transition: transform 0.3s ease;
-          pointer-events: none;
-        }
-
-        li:hover .nav-link::after,
-        .nav-link:focus::after {
-          transform: scaleX(1);
-        }
-
-        @media (max-width: 1023px) {
-          .nav-link::after {
-            display: none;
-          }
-        }
-      `}</style>
     </>
   );
 }

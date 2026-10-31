@@ -213,7 +213,7 @@ const ContactHero: React.FC = () => {
           onPointerEnter={handlePointerMove}
           onPointerLeave={handlePointerLeave}
           className="relative overflow-hidden rounded-2xl"
-          style={{ minHeight: 520, backgroundColor: "#02587B" }}
+          style={{ minHeight: 520, backgroundColor: "var(--color-brand)" }}
         >
           {/* decorative shapes (behind overlays & behind big text) */}
           <div

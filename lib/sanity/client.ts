@@ -10,8 +10,15 @@ export const client = createClient({
   projectId,
   dataset,
   apiVersion,
-  useCdn: process.env.NODE_ENV === 'production',
+  // Always read published content from Sanity's edge cache (apicdn.sanity.io): it is closer and
+  // faster than the main API, so slow connections (e.g. "Connect Timeout Error") happen far less.
+  // CDN on the live site (fast, cached). On your own computer (npm run dev) the main API is used:
+  // the same address the Studio uses, which is often more reliable on local networks.
+  useCdn: process.env.NODE_ENV === "production",
   perspective: 'published',
+  // Retry a failed request (network hiccup) a few times before giving up.
+  maxRetries: 3,
+  retryDelay: (attempt: number) => attempt * 500,
 })
 
 const builder = imageUrlBuilder(client)

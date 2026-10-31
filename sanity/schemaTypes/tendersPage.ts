@@ -1,4 +1,5 @@
 import { defineType, defineField, defineArrayMember } from "sanity";
+import { headerMessageFields } from "./objects/richText";
 
 const breadcrumbLink = defineArrayMember({
   name: "breadcrumbLink",
@@ -59,12 +60,23 @@ export default defineType({
       description: "Defaults to the page title when blank.",
     }),
     defineField({
-      name: "headerMessage",
-      title: "Header Supporting Message",
-      type: "text",
-      rows: 3,
-      description: "Short supporting message displayed below the page title.",
+      name: "detailBreadcrumbLinks",
+      title: "Breadcrumb Links for Each Tender Page",
+      type: "array",
+      of: [breadcrumbLink],
+      description: "Links shown before the title on every single tender page. Default: Home / Tenders.",
+      initialValue: [
+        { _key: "home", label: "Home", href: "/" },
+        { _key: "tenders", label: "Tenders", href: "/tenders" },
+      ],
     }),
+    defineField({
+      name: "detailBreadcrumbLabel",
+      title: "Current Breadcrumb Label on Each Tender Page",
+      type: "string",
+      description: 'Defaults to "Tender Details".',
+    }),
+    ...headerMessageFields(),
     defineField({
       name: "seo",
       title: "SEO",

@@ -1,196 +1,131 @@
 // components/Photos/PhotosGrid.tsx
+// Photo gallery: search, equal tiles, pages and a full screen viewer.
 "use client";
 import React, { useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import PhotoCard, { PhotoItem } from "./PhotoCard";
 import PhotoModal from "./PhotoModal";
-import { PhotosGridSkeleton } from "./Skeletons";
 
 type Raw = Record<string, unknown> | PhotoItem;
+const PAGE_SIZE = 24;
 
-export default function PhotosGrid({
-  photosArr,
-  loading = false,
-  skeletonCount = 9,
-  initialPageSize = 10,
-}: {
-  photosArr: Raw[];
-  loading?: boolean;
-  skeletonCount?: number;
-  initialPageSize?: number;
-}) {
+function pageRange(current: number, last: number) {
+  const range: (number | "...")[] = [];
+  for (let i = 1; i <= last; i++) {
+    if (i === 1 || i === last || Math.abs(i - current) <= 1) range.push(i);
+    else if (range[range.length - 1] !== "...") range.push("...");
+  }
+  return range;
+}
+
+export default function PhotosGrid({ photosArr }: { photosArr: Raw[] }) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [pageSize, setPageSize] = useState<number>(initialPageSize);
-  const [page, setPage] = useState<number>(1);
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
 
-  if (loading) return <PhotosGridSkeleton count={skeletonCount} />;
-
-  // normalize + sort full list once
-  const fullSorted = useMemo(() => {
-    const arr = Array.isArray(photosArr) ? [...photosArr] : [];
-    const mapped: PhotoItem[] = arr.map((rec: Raw, idx) => {
+  // normalize + sort once
+  const all = useMemo(() => {
+    const mapped: PhotoItem[] = (Array.isArray(photosArr) ? photosArr : []).map((rec, idx) => {
       const r = rec as Record<string, unknown>;
       return {
-        _key: typeof r._key === "string" ? (r._key as string) : `i-${idx}`,
-        title: typeof r.title === "string" ? (r.title as string) : undefined,
-        image: typeof r.image === "string" ? (r.image as string) : undefined,
-        order: typeof r.order === "number" ? (r.order as number) : undefined,
-        slug: typeof r.slug === "string" ? (r.slug as string) : undefined,
+        _key: typeof r._key === "string" ? r._key : `i-${idx}`,
+        title: typeof r.title === "string" ? r.title : undefined,
+        image: typeof r.image === "string" ? r.image : undefined,
+        order: typeof r.order === "number" ? r.order : undefined,
+        slug: typeof r.slug === "string" ? r.slug : undefined,
       };
     });
-    mapped.sort((a, b) => {
-      const aa = typeof a.order === "number" ? a.order! : 9999;
-      const bb = typeof b.order === "number" ? b.order! : 9999;
-      return aa - bb;
-    });
-    return mapped;
+    return mapped.sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999));
   }, [photosArr]);
 
-  const total = fullSorted.length;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const list = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return q ? all.filter((p) => (p.title ?? "").toLowerCase().includes(q)) : all;
+  }, [all, search]);
 
-  // clamp page
-  React.useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
+  const totalPages = Math.max(1, Math.ceil(list.length / PAGE_SIZE));
+  const current = Math.min(page, totalPages);
+  const start = (current - 1) * PAGE_SIZE;
+  const paged = list.slice(start, start + PAGE_SIZE);
 
-  const pagedItems = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return fullSorted.slice(start, start + pageSize);
-  }, [fullSorted, page, pageSize]);
-
-  function openAtGlobalIndex(globalIndex: number) {
-    setSelectedIndex(globalIndex);
+  function goPage(p: number) {
+    setPage(p);
+    document.getElementById("gallery")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
-  function onCardOpen(item: PhotoItem) {
-    // find global index
-    const idx = fullSorted.findIndex((p) => p._key === item._key || p.slug === item.slug);
-    if (idx >= 0) openAtGlobalIndex(idx);
-  }
-
-  function goPrev() {
-    if (selectedIndex === null) return;
-    if (selectedIndex > 0) setSelectedIndex(selectedIndex - 1);
-  }
-  function goNext() {
-    if (selectedIndex === null) return;
-    if (selectedIndex < fullSorted.length - 1) setSelectedIndex(selectedIndex + 1);
-  }
-
-  // pagination controls helper: show neighbors with ellipsis
-  function getPageRange(current: number, last: number, delta = 2) {
-    const range: (number | "..." )[] = [];
-    const left = Math.max(1, current - delta);
-    const right = Math.min(last, current + delta);
-
-    if (left > 1) {
-      range.push(1);
-      if (left > 2) range.push("...");
-    }
-
-    for (let i = left; i <= right; i++) range.push(i);
-
-    if (right < last) {
-      if (right < last - 1) range.push("...");
-      range.push(last);
-    }
-    return range;
-  }
+  const btn = "grid h-10 min-w-10 place-items-center border px-3 text-[15px] font-semibold transition";
 
   return (
-    <section className="w-full mx-auto mt-10 text-[#1A1A1A] bg-white">
-      <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[1440px]">
-        <div className="flex items-end justify-between mb-4">
-          <h2 className="text-[30px] md:text-[65px] leading-none font-extrabold tracking-wide">PHOTOS</h2>
-
-          <div className="flex items-center gap-3 mb-4">
-            <label className="text-sm">Per page:</label>
-            <select
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setPage(1);
-              }}
-              className="border rounded px-2 py-1"
-            >
-              {[10, 20, 30, 50, 100].map((n) => (
-                <option key={n} value={n}>{n}</option>
-              ))}
-            </select>
+    <section id="gallery" className="w-full scroll-mt-24 bg-mist py-12 text-ink md:py-16">
+      <div className="mx-auto w-[90%] max-w-[1140px] md:w-[93%] lg:w-[90%]">
+        {/* Heading + search */}
+        <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div>
+            <span className="text-[13px] font-bold uppercase tracking-[0.16em] text-brand-fg">Gallery</span>
+            <h2 className="mt-1 text-[34px] font-extrabold leading-none md:text-[48px]">Photos</h2>
+            <span className="mt-3 block h-1 w-16 bg-[#F4BA00]" />
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
+            <span className="text-[14px] text-ink/60">
+              {list.length} {list.length === 1 ? "photo" : "photos"}
+            </span>
+            <label className="flex h-11 w-full items-center gap-2 border border-brand-line/20 bg-paper px-3 focus-within:border-brand-line sm:w-72">
+              <Search size={17} className="text-brand-fg" />
+              <input
+                type="search"
+                value={search}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setPage(1);
+                }}
+                placeholder="Search photos"
+                aria-label="Search photos"
+                className="h-full w-full bg-transparent text-[15px] outline-none"
+              />
+            </label>
           </div>
         </div>
 
-        {total === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-600">No photos found.</div>
+        {list.length === 0 ? (
+          <div className="border border-dashed border-brand-line/25 bg-paper py-16 text-center text-[15px] text-ink/60">No photos found.</div>
         ) : (
           <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {pagedItems.map((item) => {
-                const globalIdx = fullSorted.findIndex((p) => p._key === item._key || p.slug === item.slug);
-                return (
-                  <div key={item._key ?? item.slug ?? String(globalIdx)}>
-                    <PhotoCard item={item} onOpen={() => openAtGlobalIndex(globalIdx)} />
-                  </div>
-                );
-              })}
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5 lg:grid-cols-4">
+              {paged.map((item, i) => (
+                <PhotoCard key={item._key} item={item} onOpen={() => setSelectedIndex(start + i)} />
+              ))}
             </div>
 
-            {/* Pagination controls */}
-            <div className="mt-6 flex flex-col md:flex-row items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={page <= 1}
-                  className={`px-3 py-2 rounded border ${page <= 1 ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
-                >
+            {totalPages > 1 && (
+              <nav aria-label="Pages" className="mt-10 flex flex-wrap items-center justify-center gap-2">
+                <button onClick={() => goPage(current - 1)} disabled={current <= 1} className={`${btn} border-brand-line/20 bg-paper hover:border-brand-line disabled:opacity-40`}>
                   Prev
                 </button>
-
-                <nav aria-label="Pages" className="flex items-center gap-1">
-                  {getPageRange(page, totalPages).map((p, i) =>
-                    p === "..." ? (
-                      <span key={`e-${i}`} className="px-2">…</span>
-                    ) : (
-                      <button
-                        key={p}
-                        onClick={() => setPage(Number(p))}
-                        aria-current={p === page ? "page" : undefined}
-                        className={`px-3 py-2 rounded border ${p === page ? "bg-[#02587B] text-white" : "hover:bg-gray-100"}`}
-                      >
-                        {p}
-                      </button>
-                    )
-                  )}
-                </nav>
-
-                <button
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={page >= totalPages}
-                  className={`px-3 py-2 rounded border ${page >= totalPages ? "opacity-40 cursor-not-allowed" : "hover:bg-gray-100"}`}
-                >
+                {pageRange(current, totalPages).map((p, i) =>
+                  p === "..." ? (
+                    <span key={`e-${i}`} className="px-1 text-ink/50">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => goPage(p)}
+                      aria-current={p === current ? "page" : undefined}
+                      className={`${btn} ${p === current ? "border-brand-line bg-brand text-white" : "border-brand-line/20 bg-paper hover:border-brand-line"}`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+                <button onClick={() => goPage(current + 1)} disabled={current >= totalPages} className={`${btn} border-brand-line/20 bg-paper hover:border-brand-line disabled:opacity-40`}>
                   Next
                 </button>
-              </div>
-
-              <div className="text-sm text-gray-600">
-                Showing <strong>{(page - 1) * pageSize + 1}</strong>–<strong>{Math.min(page * pageSize, total)}</strong> of <strong>{total}</strong>
-              </div>
-            </div>
+              </nav>
+            )}
           </>
         )}
       </div>
 
-      {/* Modal (slider) */}
-      {selectedIndex !== null && selectedIndex >= 0 && selectedIndex < fullSorted.length && (
-        <PhotoModal
-          item={fullSorted[selectedIndex]}
-          onClose={() => setSelectedIndex(null)}
-          onPrev={goPrev}
-          onNext={goNext}
-          isFirst={selectedIndex === 0}
-          isLast={selectedIndex === fullSorted.length - 1}
-          titleCentered
-        />
+      {selectedIndex !== null && list[selectedIndex] && (
+        <PhotoModal items={list} index={selectedIndex} onClose={() => setSelectedIndex(null)} onGo={setSelectedIndex} />
       )}
     </section>
   );

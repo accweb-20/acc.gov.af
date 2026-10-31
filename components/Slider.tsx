@@ -24,8 +24,15 @@ type SlideInput = Partial<Slide> & { id?: string | number };
 const isObject = (v: unknown): v is Record<string, unknown> =>
   typeof v === "object" && v !== null;
 
-export default function Slider({ apiPath = "/api/slider" }) {
-  const [slides, setSlides] = useState<Slide[]>([]);
+export default function Slider({
+  apiPath = "/api/slider",
+  initialSlides,
+}: {
+  apiPath?: string;
+  /** Slides loaded on the server (fast first paint). When given, nothing is fetched in the browser. */
+  initialSlides?: Slide[] | null;
+}) {
+  const [slides, setSlides] = useState<Slide[]>(initialSlides ?? []);
   const [index, setIndex] = useState<number>(0);
 
   // animation state
@@ -93,6 +100,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
 
   // load slides from sessionStorage or API
   useEffect(() => {
+    if (initialSlides?.length) return; // already rendered from the server
     let mounted = true;
     try {
       const raw = sessionStorage.getItem(SESSION_KEY);
@@ -478,14 +486,14 @@ export default function Slider({ apiPath = "/api/slider" }) {
     // placeholder when no slides — skeleton with circular peeks inside
     return (
       <section
-        className="slider-root w-full flex justify-center items-center mt-18 relative font-rubik"
+        className="slider-root w-full flex justify-center items-center mt-16 relative font-rubik"
         aria-roledescription="carousel"
         style={{ paddingTop: 0 }}
       >
         <style>{`
           /* Simple skeleton shimmer */
           .skeleton {
-            background: linear-gradient(90deg, #e6e6e6 0%, #f2f2f2 50%, #e6e6e6 100%);
+            background: linear-gradient(90deg, #ececec 0%, #f7f7f7 50%, #ececec 100%);
             background-size: 200% 100%;
             animation: shimmer 1.6s linear infinite;
           }
@@ -494,7 +502,8 @@ export default function Slider({ apiPath = "/api/slider" }) {
             100% { background-position: -200% 0; }
           }
           .skeleton-circle {
-            background: #d0d0d0;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
             border-radius: 9999px;
             opacity: 0.95;
           }
@@ -510,7 +519,8 @@ export default function Slider({ apiPath = "/api/slider" }) {
               alignItems: "center",
               justifyContent: "center",
               position: "relative",
-              height: peekHeight ?? 480,
+              // same shape as the slide images (2880×1080)
+              aspectRatio: "8 / 3",
               overflow: "hidden",
             }}
             className="skeleton"
@@ -542,7 +552,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
         <div className="hidden md:flex lg:hidden w-full justify-center">
           <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
             <div
-              style={{ width: "100%", height: peekHeight ?? 540, position: "relative", overflow: "hidden" }}
+              style={{ width: "100%", aspectRatio: "8 / 3", position: "relative", overflow: "hidden" }}
               className="skeleton"
               aria-hidden
             >
@@ -568,7 +578,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
         <div className="md:hidden w-full flex justify-center">
           <div style={{ width: "100%", display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
             <div
-              style={{ width: "100%", height: peekHeight ?? 620, position: "relative", overflow: "hidden" }}
+              style={{ width: "100%", aspectRatio: "786 / 960", position: "relative", overflow: "hidden" }}
               className="skeleton"
               aria-hidden
             >
@@ -756,7 +766,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
             <button
               onMouseEnter={onMouseEnter}
               onMouseLeave={onMouseLeave}
-              className="slider-button font-bold text-[#1A1A1A] hidden"
+              className="slider-button font-bold text-ink hidden"
               style={{
                 /* keep button visual size in px so it looks the same at normal zoom */
                 backgroundColor: "#FFD21B",
@@ -911,7 +921,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
             {/* Purchase (tablet) */}
             <div style={{ position: "absolute", left: 12, bottom: 14 }}>
               <button
-                className="slider-button font-bold text-[#1A1A1A] hidden"
+                className="slider-button font-bold text-ink hidden"
                 style={{
                   backgroundColor: "#FFD21B",
                   clipPath: "polygon(0 0, 100% 20%, 100% 100%, 0% 100%)",
@@ -1100,7 +1110,7 @@ export default function Slider({ apiPath = "/api/slider" }) {
             {/* Purchase mobile */}
             <div style={{ position: "absolute", left: 8, bottom: 8 }}>
               <button
-                className="slider-button font-bold text-[#1A1A1A] hidden"
+                className="slider-button font-bold text-ink hidden"
                 style={{
                   backgroundColor: "#FFD21B",
                   clipPath: "polygon(0 0, 100% 20%, 100% 100%, 0% 100%)",

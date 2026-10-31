@@ -1,4 +1,6 @@
 import { defineType, defineField, defineArrayMember } from "sanity";
+import { headerMessageFields, richTextField } from "./objects/richText";
+
 
 const breadcrumbLink = defineArrayMember({
   name: "breadcrumbLink", title: "Breadcrumb Link", type: "object",
@@ -16,19 +18,19 @@ export default defineType({
     defineField({ name: "subtitle", title: "Subtitle (fallback header message)", type: "string" }),
     defineField({ name: "breadcrumbLinks", title: "Breadcrumb Links", type: "array", of: [breadcrumbLink] }),
     defineField({ name: "breadcrumbLabel", title: "Current Breadcrumb Label", type: "string", description: "Defaults to the page title." }),
-    defineField({ name: "headerMessage", title: "Header Supporting Message", type: "text", rows: 3 }),
+    ...headerMessageFields(),
     defineField({ name: "introTitle", title: "Intro Title", type: "string" }),
-    defineField({ name: "introMessage", title: "Intro Message", type: "array", of: [defineArrayMember({ type: "block" }), defineArrayMember({ type: "image" })] }),
+    richTextField({ name: "introMessage", title: "Intro Message" }),
     defineField({ name: "introBackground", title: "Intro Background", type: "object", fields: [defineField({ name: "enabled", title: "Enabled", type: "boolean", initialValue: false })] }),
     defineField({ name: "sales", title: "Sales Items", type: "array", of: [defineArrayMember({ name: "salesItem", title: "Sales Item", type: "object", fields: [
       defineField({ name: "title", title: "Title", type: "string" }),
-      defineField({ name: "description", title: "Description", type: "array", of: [defineArrayMember({ type: "block" }), defineArrayMember({ type: "image" })] }),
+      richTextField({ name: "description", title: "Description" }),
       defineField({ name: "image", title: "Image", type: "image", options: { hotspot: true } }),
       defineField({ name: "order", title: "Order", type: "number" }),
       defineField({ name: "slug", title: "Slug", type: "slug", options: { source: "title", maxLength: 96 } }),
     ], preview: { select: { title: "title", media: "image" } } })] }),
     defineField({ name: "bodyTitle", title: "Body Title", type: "string" }),
-    defineField({ name: "bodyMessage", title: "Body Message", type: "array", of: [defineArrayMember({ type: "block" }), defineArrayMember({ type: "image" })] }),
+    richTextField({ name: "bodyMessage", title: "Body Message" }),
     defineField({ name: "bodyBackground", title: "Body Background", type: "object", fields: [defineField({ name: "enabled", title: "Enabled", type: "boolean", initialValue: false })] }),
     defineField({ name: "seo", title: "SEO", type: "object", fields: [
       defineField({ name: "seoTitle", title: "SEO Title", type: "string" }),

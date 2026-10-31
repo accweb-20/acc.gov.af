@@ -14,7 +14,7 @@ import { apiVersion, dataset, projectId } from './sanity/env'
 
 // Correct import from schemaTypes
 import { schema } from './sanity/schemaTypes'
-import { structure } from './sanity/structure'
+import { productTemplates, structure } from './sanity/structure'
 
 export default defineConfig({
   basePath: '/admin',
@@ -23,6 +23,8 @@ export default defineConfig({
   // Pass schemaTypes inside the `types` property
   schema: {
     types: schema,
+    // "New product" inside a category starts with that category selected
+    templates: (prev) => [...prev, ...productTemplates],
   },
   plugins: [
     structureTool({ structure }),

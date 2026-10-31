@@ -19,17 +19,15 @@ const styles: Record<string, { bg: string; color: string }> = {
   closed: { bg: 'var(--jb-closed-bg)', color: 'var(--jb-closed)' },
 }
 
+/** Small square label with a dot: Open / Expired / Closed. */
 export function StatusBadge({ status, closingDate, dict }: StatusBadgeProps) {
   const computed = getComputedStatus(status, closingDate)
-  const label = dict.status[computed]
   const style = styles[computed]
 
   return (
-    <span
-      className="inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full"
-      style={{ backgroundColor: style.bg, color: style.color }}
-    >
-      {label}
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[12px] font-bold" style={{ backgroundColor: style.bg, color: style.color }}>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: style.color }} />
+      {dict.status[computed]}
     </span>
   )
 }

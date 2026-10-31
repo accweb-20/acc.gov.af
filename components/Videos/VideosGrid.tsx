@@ -85,7 +85,7 @@ export default function VideosGrid({ videosArr, loading = false, skeletonCount =
   }
 
   return (
-    <section className="w-full mx-auto mt-10 text-[#1A1A1A] bg-white">
+    <section className="w-full mx-auto mt-10 text-ink bg-paper">
       <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[1440px]">
         <div className="flex items-end justify-between mb-4">
           <h2 className="text-[30px] md:text-[65px] leading-none font-extrabold tracking-wide mb-4">VIDEOS</h2>
@@ -141,7 +141,7 @@ export default function VideosGrid({ videosArr, loading = false, skeletonCount =
                         key={p}
                         onClick={() => setPage(Number(p))}
                         aria-current={p === page ? "page" : undefined}
-                        className={`px-3 py-2 rounded border ${p === page ? "bg-[#02587B] text-white" : "hover:bg-gray-100"}`}
+                        className={`px-3 py-2 rounded border ${p === page ? "bg-brand text-white" : "hover:bg-gray-100"}`}
                       >
                         {p}
                       </button>

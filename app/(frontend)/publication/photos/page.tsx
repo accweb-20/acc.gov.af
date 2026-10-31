@@ -5,6 +5,8 @@ import PageHeader from "@/components/PageHeader";
 import PhotosGrid from "@/components/Photos/PhotosGrid";
 import PhotosIntro from "@/components/Photos/PhotosIntro";
 import { Metadata } from "next";
+import RichText from "@/components/Import/RichText";
+import { hasRich } from "@/lib/imports";
 
 export const revalidate = 60;
 
@@ -14,7 +16,7 @@ type PhotoDoc = {
   subtitle?: string;
   breadcrumbLinks?: BreadcrumbLink[];
   breadcrumbLabel?: string;
-  headerMessage?: string;
+  headerMessage?: unknown; // rich text (or older plain text)
   introTitle?: string;
   introMessage?: unknown[];
   introBackground?: { enabled?: boolean };
@@ -45,7 +47,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function Page() {
   const q = `*[_type == "photosPage"][0]{
-    title, subtitle, breadcrumbLinks[]{_key, label, href}, breadcrumbLabel, headerMessage,
+    title, subtitle, breadcrumbLinks[]{_key, label, href}, breadcrumbLabel, "headerMessage": coalesce(headerDescription, headerMessage),
     introTitle, introMessage, introBackground, bodyTitle, bodyMessage, bodyBackground,
     photos[]{ _key, title, "image": image.asset->url, order, "slug": slug.current }
   }`;
@@ -68,6 +70,7 @@ export default async function Page() {
         introBackgroundEnabled={!!data.introBackground?.enabled}
       />
       <PhotosGrid photosArr={photosRaw} />
+      {(data.bodyTitle || hasRich(data.bodyMessage)) && (
       <section
         className="w-full mx-auto"
         style={{ background: !!data.bodyBackground?.enabled ? "linear-gradient(180deg,#f5f0ff,#f1e8ff)" : "transparent" }}
@@ -75,14 +78,15 @@ export default async function Page() {
         <div className="mx-auto w-[90%] md:w-[93%] lg:w-[90%] max-w-[1140px] py-12">
           <div className="max-w-[920px]">
             {data.bodyTitle && <h2 className="text-[45px] md:text-[60px] font-extrabold mb-6">{data.bodyTitle}</h2>}
-            {data.bodyMessage && (
-              <div className="prose prose-sm sm:prose lg:prose-lg max-w-none text-[#1A1A1A]">
-                {(data.bodyMessage as any) ?? null}
+            {hasRich(data.bodyMessage) && (
+              <div className="max-w-none text-[17px] text-ink">
+                <RichText value={data.bodyMessage} />
               </div>
             )}
           </div>
         </div>
       </section>
+      )}
     </main>
   );
 }
