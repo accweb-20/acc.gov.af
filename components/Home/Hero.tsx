@@ -74,7 +74,7 @@ function ProductPhoto({ p, sizes, className = "", pad = "" }: { p: HeroProduct; 
       alt={p.image?.alt || p.title || ""}
       fill
       sizes={sizes}
-      className={`${wide ? "object-cover" : `object-contain mix-blend-multiply ${pad}`} ${className}`}
+      className={`${wide ? "object-cover" : `object-contain mix-blend-multiply dark:mix-blend-normal ${pad}`} ${className}`}
     />
   );
 }
@@ -325,7 +325,7 @@ function TradeRoutes({ d, data, years }: { d: HeroTexts & { regions?: string[]; 
               href={p.href}
               className={`absolute hidden items-center gap-3 bg-paper py-2.5 pl-2.5 pr-4 text-ink shadow-[0_14px_30px_rgba(0,0,0,0.25)] transition hover:-translate-y-1 sm:flex ${i === 0 ? "right-[16%] top-[2%]" : "bottom-[4%] right-0"}`}
             >
-              <span className="relative block h-11 w-11">
+              <span className="relative block h-11 w-11 overflow-hidden bg-white">
                 <ProductPhoto p={p} sizes="44px" />
               </span>
               <span>

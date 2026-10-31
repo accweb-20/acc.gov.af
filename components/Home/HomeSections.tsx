@@ -25,7 +25,8 @@ export const HOME_EXTRA_QUERY = `{
   "tenderCount": count(*[_type == "tender"]),
   "jobCount": count(*[_type == "jobPosting" && status != "draft"]),
   "photoCount": count(*[_type == "photosPage"][0].photos),
-  "videoCount": count(*[_type == "videosPage"][0].videos)
+  "videoCount": count(*[_type == "videosPage"][0].videos),
+  "facts": *[_type == "aboutPage" && slug.current == "policies"][0].facts[defined(value)]{ _key, value, label }
 }`;
 
 export type HomeExtra = {
@@ -35,6 +36,7 @@ export type HomeExtra = {
   jobCount?: number;
   photoCount?: number;
   videoCount?: number;
+  facts?: { _key: string; value?: string; label?: string }[] | null; // same facts as the Our Policies page
 } | null;
 
 
@@ -107,6 +109,23 @@ export function HomeExplore({ data }: { data: HomeExtra }) {
           ))}
         </div>
       </div>
+
+      {/* Key facts (edited on the "Our Policies" page in Sanity) */}
+      {(data?.facts?.length ?? 0) > 0 && (
+        <Reveal className={`${CONTAINER} relative mt-12 md:mt-14`}>
+          <div className="grid grid-cols-2 border-t-4 border-brand-line bg-paper shadow-[0_10px_30px_rgba(2,88,123,0.07)] lg:grid-cols-4">
+            {data!.facts!.slice(0, 4).map((f, i) => (
+              <div key={f._key} className={`border-brand-line/10 px-4 py-7 text-center ${i % 2 ? "border-l" : "lg:border-l"} ${i === 0 ? "lg:border-l-0" : ""} ${i > 1 ? "border-t lg:border-t-0" : ""}`}>
+                <b className="block text-[26px] font-extrabold leading-none text-brand-fg md:text-[34px]">{f.value}</b>
+                <span className="mt-2 block text-[14px] text-ink/65">{f.label}</span>
+              </div>
+            ))}
+          </div>
+          <Link href="/about-us/policies" className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-bold text-brand-fg hover:underline">
+            Read our policies <ArrowRight size={15} />
+          </Link>
+        </Reveal>
+      )}
     </section>
   );
 }
