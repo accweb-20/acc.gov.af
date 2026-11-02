@@ -95,14 +95,10 @@ function CeoMessage({ home }: { home: HomeDoc }) {
             </h2>
           )}
 
-          <div className="relative mt-8">
-            <Quote
-              size={64}
-              strokeWidth={1.2}
-              aria-hidden="true"
-              className={`absolute -left-1 -top-6 ${dark ? "text-white/10" : "text-brand-fg/10"}`}
-            />
-            <div className={`relative text-[16px] leading-[1.8] md:text-[18px] ${dark ? "text-[#F5F5F5]/90" : "text-ink/80"}`}>
+          <div className="mt-8">
+            {/* Opening quotation mark above the message (not behind the text) */}
+            <Quote size={40} strokeWidth={0} fill="currentColor" aria-hidden="true" className="mb-3 rotate-180 text-[#F4BA00]" />
+            <div className={`text-[16px] leading-[1.8] md:text-[18px] ${dark ? "text-[#F5F5F5]/90" : "text-ink/80"}`}>
               <RichText value={message} onDark={dark} />
             </div>
           </div>

@@ -5,16 +5,14 @@
 import Footer, { type FooterDocument } from "@/components/Footer";
 import Header, { type HeaderDoc } from "@/components/Header";
 import ScrollToTop from "@/components/ScrollToTop";
-import { Rubik } from "next/font/google";
 import { sanityClient } from "@/sanity/lib/client";
 import { Providers } from "./providers";
 import "../../styles/index.css";
+// Rubik font files come from npm (@fontsource-variable/rubik) and are bundled with the site,
+// so the build never has to download fonts from Google (that download sometimes fails on Vercel).
+import "@fontsource-variable/rubik";
 
-const rubik = Rubik({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  display: "swap",
-});
+const RUBIK = `"Rubik Variable", system-ui, -apple-system, "Segoe UI", Roboto, Arial`;
 
 // Queries live here (server file): values exported from "use client" files can't be used on the server.
 const HEADER_QUERY = `*[_type == "header"][0]{
@@ -89,8 +87,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="preconnect" href="https://fonts.cdnfonts.com" crossOrigin="" />
         <link rel="stylesheet" href="https://fonts.cdnfonts.com/css/getronde" />
       </head>
-      {/* rubik.className makes the whole site use Rubik (self-hosted by Next.js, no extra request) */}
-      <body className={`bg-paper text-ink text-[18px] ${rubik.className}`}>
+      {/* The whole site uses Rubik (self-hosted, see the import above) */}
+      <body className="bg-paper text-ink text-[18px]" style={{ fontFamily: RUBIK }}>
         <style>{`
           /* Rubik Dirt via jsDelivr (fontsource) – downloaded only where it is used */
           @font-face {
@@ -101,13 +99,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             font-display: swap;
           }
           .font-getronde {
-            font-family: "GETRONDE", "RubikDirt", "Rubik", system-ui, -apple-system, "Segoe UI", Roboto, Arial !important;
+            font-family: "GETRONDE", "RubikDirt", "Rubik Variable", system-ui, -apple-system, "Segoe UI", Roboto, Arial !important;
           }
           .font-rubik-dirt {
-            font-family: "RubikDirt", "Rubik", system-ui, -apple-system, "Segoe UI", Roboto, Arial !important;
+            font-family: "RubikDirt", "Rubik Variable", system-ui, -apple-system, "Segoe UI", Roboto, Arial !important;
           }
           .font-rubik {
-            font-family: ${rubik.style.fontFamily}, system-ui, -apple-system, "Segoe UI", Roboto, Arial !important;
+            font-family: ${RUBIK} !important;
           }
           /* ensure no radius inside our page card area */
           .no-radius * {
