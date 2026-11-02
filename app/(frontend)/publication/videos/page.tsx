@@ -70,6 +70,7 @@ export default async function Page() {
         introBackgroundEnabled={!!data.introBackground?.enabled}
       />
       <VideosGrid videosArr={videosRaw} />
+      {(data.bodyTitle || hasRich(data.bodyMessage)) && (
       <section
         className="w-full mx-auto"
         style={{ background: !!data.bodyBackground?.enabled ? "linear-gradient(180deg,#f5f0ff,#f1e8ff)" : "transparent" }}
@@ -85,6 +86,7 @@ export default async function Page() {
           </div>
         </div>
       </section>
+      )}
     </main>
   );
 }

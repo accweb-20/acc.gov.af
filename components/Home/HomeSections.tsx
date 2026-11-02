@@ -8,7 +8,12 @@ import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
+  BadgeCheck,
   Briefcase,
+  FileCheck2,
+  Landmark,
+  PieChart,
+  Users,
   Building2,
   FileText,
   Images,
@@ -110,22 +115,57 @@ export function HomeExplore({ data }: { data: HomeExtra }) {
         </div>
       </div>
 
-      {/* Key facts (edited on the "Our Policies" page in Sanity) */}
-      {(data?.facts?.length ?? 0) > 0 && (
-        <Reveal className={`${CONTAINER} relative mt-12 md:mt-14`}>
-          <div className="grid grid-cols-2 border-t-4 border-brand-line bg-paper shadow-[0_10px_30px_rgba(2,88,123,0.07)] lg:grid-cols-4">
-            {data!.facts!.slice(0, 4).map((f, i) => (
-              <div key={f._key} className={`border-brand-line/10 px-4 py-7 text-center ${i % 2 ? "border-l" : "lg:border-l"} ${i === 0 ? "lg:border-l-0" : ""} ${i > 1 ? "border-t lg:border-t-0" : ""}`}>
-                <b className="block text-[26px] font-extrabold leading-none text-brand-fg md:text-[34px]">{f.value}</b>
-                <span className="mt-2 block text-[14px] text-ink/65">{f.label}</span>
-              </div>
-            ))}
-          </div>
-          <Link href="/about-us/policies" className="mt-4 inline-flex items-center gap-1.5 text-[14px] font-bold text-brand-fg hover:underline">
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+/** Icon for a fact, picked from its label. */
+function factIcon(label = "") {
+  const l = label.toLowerCase();
+  if (l.includes("capital")) return Landmark;
+  if (l.includes("share")) return PieChart;
+  if (l.includes("board") || l.includes("member")) return Users;
+  if (l.includes("report") || l.includes("standard")) return FileCheck2;
+  return BadgeCheck;
+}
+
+/** "At a glance" band right under the hero. Facts are edited on the "Our Policies" page in Sanity. */
+export function HomeFacts({ data }: { data: HomeExtra }) {
+  const facts = (data?.facts ?? []).slice(0, 4);
+  if (!facts.length) return null;
+  return (
+    <section className="relative border-b border-brand-line/10 bg-paper py-12 md:py-16">
+      <div className={`${CONTAINER} grid overflow-hidden shadow-[0_24px_60px_rgba(2,88,123,0.12)] lg:grid-cols-[300px_minmax(0,1fr)]`}>
+        {/* Label panel */}
+        <Reveal from="left" className="relative flex flex-col justify-center overflow-hidden bg-brand p-7 text-white md:p-9">
+          <span className="pointer-events-none absolute -bottom-10 -right-10 h-32 w-32 rotate-12 border-[3px] border-[#F4BA00]/30" />
+          <span className="text-[12px] font-bold uppercase tracking-[0.2em] text-[#F4BA00]">At a glance</span>
+          <h2 className="mt-2 text-[26px] font-extrabold leading-tight md:text-[30px]">Afghan Cart in numbers</h2>
+          <p className="mt-2 text-[14px] leading-relaxed text-white/70">A state-owned corporation, governed by its official Statute.</p>
+          <Link href="/about-us/policies" className="mt-5 inline-flex items-center gap-1.5 text-[14px] font-bold text-[#F4BA00] hover:underline">
             Read our policies <ArrowRight size={15} />
           </Link>
         </Reveal>
-      )}
+
+        {/* Facts */}
+        <div className="grid grid-cols-2 bg-paper lg:grid-cols-4">
+          {facts.map((f, i) => {
+            const Icon = factIcon(f.label);
+            return (
+              <Reveal key={f._key} delay={i * 90} className={`group relative flex flex-col justify-center border-brand-line/10 p-6 md:p-7 ${i % 2 ? "border-l" : "lg:border-l"} ${i === 0 ? "lg:border-l-0" : ""} ${i > 1 ? "border-t lg:border-t-0" : ""}`}>
+                <span className="absolute left-0 top-0 h-[3px] w-10 bg-[#F4BA00] transition-all duration-500 group-hover:w-full" />
+                <span className="grid h-11 w-11 place-items-center bg-brand/10 text-brand-fg transition group-hover:bg-[#F4BA00] group-hover:text-[#1A1A1A]">
+                  <Icon size={21} />
+                </span>
+                <b className="mt-5 block whitespace-nowrap text-[22px] font-extrabold leading-none text-ink sm:text-[26px] lg:text-[24px] xl:text-[28px]">{f.value}</b>
+                <span className="mt-2 block text-[14px] leading-snug text-ink/60">{f.label}</span>
+              </Reveal>
+            );
+          })}
+        </div>
+      </div>
     </section>
   );
 }

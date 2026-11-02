@@ -32,14 +32,14 @@ export default function PhotoCard({ item, onOpen }: { item: PhotoItem; onOpen?: 
           alt={item.title ?? "photo"}
           loading="lazy"
           draggable={false}
-          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
         />
       ) : (
         <span className="absolute inset-0 grid place-items-center text-sm text-gray-400">No image</span>
       )}
 
       {/* Title bar */}
-      <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-[#013F59]/90 via-[#013F59]/60 to-transparent px-3 pb-3 pt-10 text-white transition duration-300 md:translate-y-full md:group-hover:translate-y-0 md:group-focus-visible:translate-y-0">
+      <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-[#013F59]/50 via-[#013F59]/15 to-transparent px-3 pb-3 pt-12 text-white [text-shadow:0_1px_3px_rgba(0,0,0,0.45)] transition duration-300 md:translate-y-full md:group-hover:translate-y-0 md:group-focus-visible:translate-y-0">
         <span className="line-clamp-2 text-[14px] font-semibold leading-snug md:text-[15px]">{item.title ?? ""}</span>
         <span className="grid h-8 w-8 shrink-0 place-items-center bg-[#F4BA00] text-[#1A1A1A]">
           <Expand size={15} />

@@ -1,29 +1,27 @@
 // components/Videos/VideoModal.tsx
+// Full screen player: title, counter, previous / next and the video (same look as the photo viewer).
 "use client";
 import React, { useEffect, useRef } from "react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 
 export default function VideoModal({
   item,
+  index,
+  total,
   onClose,
   onPrev,
   onNext,
-  isFirst,
-  isLast,
-  titleCentered = false,
 }: {
   item: { title?: string | null; video?: string | null; poster?: string | null };
+  index: number;
+  total: number;
   onClose: () => void;
   onPrev: () => void;
   onNext: () => void;
-  isFirst: boolean;
-  isLast: boolean;
-  titleCentered?: boolean;
 }) {
-  if (!item) return null;
-  const vUrl = typeof item.video === "string" ? item.video : null;
-  const poster = typeof item.poster === "string" ? item.poster : undefined;
-  const videoRef = useRef<HTMLVideoElement | null>(null);
   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
+  const isFirst = index === 0;
+  const isLast = index === total - 1;
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -32,80 +30,54 @@ export default function VideoModal({
       if (e.key === "ArrowRight") onNext();
     }
     document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    setTimeout(() => closeBtnRef.current?.focus(), 50);
-
-    // try autoplay muted
-    try {
-      videoRef.current?.play().catch(() => {});
-    } catch {}
-
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-      try { videoRef.current?.pause(); } catch {}
-    };
+    return () => document.removeEventListener("keydown", onKey);
   }, [onClose, onPrev, onNext]);
 
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    closeBtnRef.current?.focus();
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, []);
+
+  const vUrl = typeof item.video === "string" ? item.video : null;
+  const arrow = "absolute top-1/2 z-20 grid h-12 w-12 -translate-y-1/2 place-items-center bg-white/10 text-white transition hover:bg-[#F4BA00] hover:text-[#1A1A1A] disabled:pointer-events-none disabled:opacity-25";
+
   return (
-    <div role="dialog" aria-modal="true" className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/80" onClick={() => { try { videoRef.current?.pause(); } catch {} onClose(); }} aria-hidden />
-
-      <div className="relative z-[1001] max-w-[96vw] max-h-[96vh] w-full">
-        <div className="bg-black rounded shadow-2xl overflow-hidden relative">
-          {/* Close */}
-          <button
-            ref={closeBtnRef}
-            onClick={() => { try { videoRef.current?.pause(); } catch {} onClose(); }}
-            aria-label="Close"
-            className="absolute right-3 top-3 z-20 bg-white/10 hover:bg-white/20 p-2 rounded focus:outline-none"
-            title="Close"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-
-          {/* Prev / Next */}
-          <button
-            onClick={() => { try { videoRef.current?.pause(); } catch {} onPrev(); }}
-            disabled={isFirst}
-            aria-label="Previous"
-            className={`absolute left-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded bg-white/10 hover:bg-white/20 focus:outline-none ${isFirst ? "opacity-40 cursor-not-allowed" : ""}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 18l-6-6 6-6"/>
-            </svg>
-          </button>
-
-          <button
-            onClick={() => { try { videoRef.current?.pause(); } catch {} onNext(); }}
-            disabled={isLast}
-            aria-label="Next"
-            className={`absolute right-2 top-1/2 -translate-y-1/2 z-20 p-2 rounded bg-white/10 hover:bg-white/20 focus:outline-none ${isLast ? "opacity-40 cursor-not-allowed" : ""}`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-8 h-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
-
-          <div className="w-full h-[70vh] sm:h-[78vh] lg:h-[84vh] flex items-center justify-center relative">
-            {vUrl ? (
-              <video ref={videoRef} src={vUrl} controls poster={poster ?? undefined} className="max-w-full max-h-full" />
-            ) : (
-              <div className="text-white">No video</div>
-            )}
-
-            
-          </div>
-
-          {!titleCentered && (
-            <div className="p-4 bg-neutral-900/60 text-white">
-              <h3 className="text-lg font-semibold text-center">{item.title ?? "\u00A0"}</h3>
-            </div>
-          )}
+    <div role="dialog" aria-modal="true" aria-label={item.title ?? "Video"} className="fixed inset-0 z-[1000] flex flex-col bg-[#0B1F29]/95 text-white">
+      {/* Top bar */}
+      <div className="flex items-center justify-between gap-4 px-4 py-3 md:px-8">
+        <div className="min-w-0">
+          <span className="text-[13px] font-bold tracking-[0.14em] text-[#F4BA00]">
+            {String(index + 1).padStart(2, "0")} <span className="text-white/45">/ {String(total).padStart(2, "0")}</span>
+          </span>
+          <h3 className="truncate text-[17px] font-semibold md:text-[20px]">{item.title ?? ""}</h3>
         </div>
+        <button ref={closeBtnRef} onClick={onClose} aria-label="Close" className="grid h-11 w-11 shrink-0 place-items-center bg-white/10 transition hover:bg-[#F4BA00] hover:text-[#1A1A1A]">
+          <X size={22} />
+        </button>
+      </div>
+
+      {/* Video */}
+      <div className="relative flex min-h-0 flex-1 items-center justify-center px-4 pb-6 md:px-20" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        {total > 1 && (
+          <button onClick={onPrev} disabled={isFirst} aria-label="Previous video" className={`${arrow} left-2 md:left-6`}>
+            <ChevronLeft size={26} />
+          </button>
+        )}
+        {vUrl ? (
+          // key: restart the player when moving to another video
+          <video key={vUrl} src={vUrl} poster={item.poster ?? undefined} controls autoPlay playsInline className="max-h-full max-w-full bg-black shadow-[0_30px_80px_rgba(0,0,0,0.5)]" />
+        ) : (
+          <div className="text-white/60">No video</div>
+        )}
+        {total > 1 && (
+          <button onClick={onNext} disabled={isLast} aria-label="Next video" className={`${arrow} right-2 md:right-6`}>
+            <ChevronRight size={26} />
+          </button>
+        )}
       </div>
     </div>
   );

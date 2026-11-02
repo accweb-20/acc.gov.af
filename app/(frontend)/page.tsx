@@ -11,7 +11,7 @@ import { HomeImports, type HomeImportsData } from "@/components/Import/ImportsGr
 import RichText from "@/components/Import/RichText";
 import { SERVICES, hasRich, homeImportsQuery, imgUrl, sectionHomeQuery, toPlain, type SanityImg } from "@/lib/imports";
 import { sanityClient } from "@/sanity/lib/client";
-import { HOME_EXTRA_QUERY, HomeContact, HomeExplore, type HomeExtra } from "@/components/Home/HomeSections";
+import { HOME_EXTRA_QUERY, HomeContact, HomeExplore, HomeFacts, type HomeExtra } from "@/components/Home/HomeSections";
 
 // Cached and refreshed every minute (fast for visitors, still up to date)
 export const revalidate = 60;
@@ -173,6 +173,9 @@ export default async function Home() {
       <ScrollToTop />
 
       <HomeHero data={heroData} />
+
+      {/* Key facts (from the Our Policies page) */}
+      <HomeFacts data={extra} />
 
       {hasIntro && home && <CeoMessage home={home} />}
 
